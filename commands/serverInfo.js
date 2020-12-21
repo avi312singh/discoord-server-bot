@@ -9,6 +9,7 @@ async function fetchHTML(url) {
 
 async function serverInfo(queryName) {
     console.log("name to be searched is ", queryName[0])
+    await fetch("https://refactor.jp/chivalry/?country=GB")
     const $ = await fetchHTML("https://refactor.jp/chivalry/?country=GB")
     let nameToBeSearched = "";
     let serverWebpage = "";
@@ -66,6 +67,7 @@ async function serverInfo(queryName) {
     });
 
     console.error("SERVER WEBPAGE URL ******", serverWebpage)
+    await fetch(serverWebpage);
     const $webpage = await fetchHTML(serverWebpage);
 
     lastUpdate = $webpage("body > div.section > div.heading > div.contents > p.lastUpdate").text();
