@@ -54,7 +54,11 @@ async function serverInfo(queryName) {
             throw new Error(queryName[0] + "is not recognised");
     }
 
+
+    console.error("Cheerio has this loaded before each loop: ", $.html())
+    console.error("ABOVE EACH LOOP ******")
     $("body > div.section > div.contents > div.contentBody > table.serverList.f16 > tbody > tr").each((index, element) => {
+        console.error("INSIDE EACH LOOP ******")
         const tds = $(element).find("td");
         const serverName = $(tds[2]) ? $(tds[2]).text() : "serverName empty";
         const playerAmount = $(tds[3]) ? $(tds[3]).text() : "playerAmount empty";
