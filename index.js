@@ -3,12 +3,23 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 const botCommands = require('./commands');
+const express = require('express');
+const app = express();
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
 });
 
 const TOKEN = process.env.TOKEN;
+app.set('port', (process.env.PORT || 5000));
+
+//For avoidong Heroku $PORT error
+app.get('/', function (request, response) {
+  var result = 'App is running'
+  response.send(result);
+}).listen(app.get('port'), function () {
+  console.log('App is running, server is listening on port ', app.get('port'));
+});
 
 bot.login(TOKEN);
 
