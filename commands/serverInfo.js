@@ -63,7 +63,7 @@ async function serverInfo(queryName) {
         const serverName = $(tds[2]) ? $(tds[2]).text() : "serverName empty";
         const playerAmount = $(tds[3]) ? $(tds[3]).text() : "playerAmount empty";
         const playerAmountWithoutMaxPlayers = playerAmount.replace(/\/(.*)/g, "");
-
+        console.error("INSDE EACH LOOP serverName:****** ", serverName)
         if (serverName.includes(nameToBeSearched)) {
             console.error("INSDE EACH LOOP serverInfo:****** ", serverInfo)
             serverInfo = { serverName: serverName, playerAmount: playerAmountWithoutMaxPlayers }
