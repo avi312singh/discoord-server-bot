@@ -88,7 +88,8 @@ module.exports = {
                         }
                     })
                     .catch(collected => {
-                        msg.reply('You did not react with thumbs down. ** Cancelling restart **');
+                        msg.reply('Error ** Cancelling restart **', collected);
+                        console.error("Error", collected);
                     });
             }
         })
