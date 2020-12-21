@@ -66,7 +66,6 @@ async function serverInfo(queryName) {
         }
     });
 
-    console.error("SERVER WEBPAGE URL ******", serverWebpage)
     await axios.get(serverWebpage);
     const $webpage = await fetchHTML(serverWebpage);
 
