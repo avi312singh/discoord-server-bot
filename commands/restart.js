@@ -1,8 +1,18 @@
 const query = require("source-server-query");
 
+const serverRestartConfig = {
+    method: 'post',
+    url: 'https://billing.time4vps.com/api/server/144002/reboot',
+    headers: {
+        'Authorization': process.env.AUTHORIZATION,
+        'Cookie': '__cfduid=d2e88590e27d1f2c0a6bf0ca2d9b6b7391608573389'
+    }
+};
+
 async function restartServer(queryName) {
 
     let directQueryInfo = {};
+
 
     console.log("server to be restarted is ", queryName[0])
 
@@ -65,7 +75,14 @@ module.exports = {
                         const reaction = collected.first();
                         if (reaction.emoji.name === '👍') {
                             msg.reply('You reacted with a thumbs up. ** Restarting server **');
-                            //TODO: API CALL FOR RESTART HERE
+
+                            axios(serverRestartConfig)
+                                .then(function (response) {
+                                    console.log(JSON.stringify(response.data));
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
                         } else {
                             msg.reply('You reacted with thumbs down. ** Cancelling restart **');
                         }
