@@ -75,13 +75,15 @@ module.exports = {
                     .then(collected => {
                         const reaction = collected.first();
                         if (reaction.emoji.name === '👍') {
-                            msg.reply('You reacted with a thumbs up. ** Restarting server **');
+                            msg.reply('You reacted with a thumbs up. ** Attempting ** to Restarting server');
 
                             axios(serverRestartConfig)
-                                .then(function (response) {
+                                .then(response => {
                                     console.log(JSON.stringify(response.data));
+                                    if(response.status == 200 && response.data.task_id != undefined)
+                                        msg.reply('Server restart successful! Please wait');
                                 })
-                                .catch(function (error) {
+                                .catch(error => {
                                     console.log(error);
                                 });
                         } else {
