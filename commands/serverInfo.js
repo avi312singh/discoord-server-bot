@@ -54,21 +54,13 @@ async function serverInfo(queryName) {
             throw new Error(queryName[0] + "is not recognised");
     }
 
-
-    console.error("Cheerio has this loaded before each loop: ", $.html())
-    console.error("ABOVE EACH LOOP ******")
     $("body > div.section > div.contents > div.contentBody > table.serverList.f16 > tbody > tr").each((index, element) => {
-        console.error("INSIDE EACH LOOP ******")
         const tds = $(element).find("td");
         const serverName = $(tds[2]) ? $(tds[2]).text() : "serverName empty";
         const playerAmount = $(tds[3]) ? $(tds[3]).text() : "playerAmount empty";
         const playerAmountWithoutMaxPlayers = playerAmount.replace(/\/(.*)/g, "");
-        console.error("INSDE EACH LOOP serverName:****** ", serverName)
         if (serverName.includes(nameToBeSearched)) {
-            console.error("INSDE EACH LOOP serverInfo:****** ")
-            console.error("INSDE EACH LOOP serverInfo:****** ", serverInfo)
             serverInfo = { serverName: serverName, playerAmount: playerAmountWithoutMaxPlayers }
-            console.error("INSDE EACH LOOP serverWebpage:****** ", serverWebpage)
             serverWebpage = $(tds[2]) ? $(tds[2]).find('a').attr('href') : "server webpage not found";
         }
     });
