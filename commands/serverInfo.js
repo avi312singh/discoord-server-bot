@@ -65,6 +65,7 @@ async function serverInfo(queryName) {
         const playerAmountWithoutMaxPlayers = playerAmount.replace(/\/(.*)/g, "");
         console.error("INSDE EACH LOOP serverName:****** ", serverName)
         if (serverName.includes(nameToBeSearched)) {
+            console.error("INSDE EACH LOOP serverInfo:****** ")
             console.error("INSDE EACH LOOP serverInfo:****** ", serverInfo)
             serverInfo = { serverName: serverName, playerAmount: playerAmountWithoutMaxPlayers }
             console.error("INSDE EACH LOOP serverWebpage:****** ", serverWebpage)
