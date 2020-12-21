@@ -99,7 +99,7 @@ module.exports = {
             const directQueryInfoObject = directQueryInfoArray[0].directQueryInfo
 
             msg.channel.send('*********** SERVER INFORMATION AS OF CURRENTLY ***********');
-            if (directQueryInfoObject.name !== undefined){
+            if (directQueryInfoObject.name !== undefined) {
                 msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is online');
                 msg.reply(directQueryInfoObject.name + " is running map " + directQueryInfoObject.map + " and has " + directQueryInfoObject.playersnum + " players with " + directQueryInfoObject.botsnum + " of those being bots")
             }
@@ -117,9 +117,10 @@ module.exports = {
         })
             .catch(error => {
                 console.error("Error has occurred: ", error);
-                if (error === "is not recognised")
-                    return msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not ours!')
-                else msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not online yet!')
+                if (error === "is not recognised") {
+                    msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not ours!')
+                }
+                msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not online yet!')
             }
             );
     }
