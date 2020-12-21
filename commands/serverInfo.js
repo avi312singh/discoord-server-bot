@@ -66,7 +66,7 @@ async function serverInfo(queryName) {
         }
     });
 
-    console.log("SERVER WEBPAGE URL ******", serverWebpage)
+    console.error("SERVER WEBPAGE URL ******", serverWebpage)
     const $webpage = await fetchHTML(serverWebpage);
 
     lastUpdate = $webpage("body > div.section > div.heading > div.contents > p.lastUpdate").text();
