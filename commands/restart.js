@@ -52,7 +52,7 @@ module.exports = {
             if (resolve.name !== undefined) {
                 msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is online');
                 msg.reply(resolve.name + " is running map " + resolve.map + " and has " + resolve.playersnum + " players with " + resolve.botsnum + " of those being bots")
-                msg.reply("Click on the thumps up emoji at the initial *** server_restart *** command to confirm the restart")
+                msg.reply("Click on the thumbs up emoji at the initial *** server_restart *** command to confirm the restart or any other emoji to cancel restart")
 
                 msg.react('👍');
 
@@ -64,14 +64,14 @@ module.exports = {
                     .then(collected => {
                         const reaction = collected.first();
                         if (reaction.emoji.name === '👍') {
-                            msg.reply('you reacted with a thumbs up. ** Restarting server **');
+                            msg.reply('You reacted with a thumbs up. ** Restarting server **');
                             //TODO: API CALL FOR RESTART HERE
                         } else {
-                            msg.reply('you reacted with a thumbs down. ** Cancelling restart **');
+                            msg.reply('You reacted with another emoji. ** Cancelling restart **');
                         }
                     })
                     .catch(collected => {
-                        msg.reply('you reacted with neither a thumbs up, nor a thumbs down. Cancelling restart');
+                        msg.reply('You did not react with thumbs down. ** Cancelling restart **');
                     });
             }
         })
