@@ -63,7 +63,9 @@ module.exports = {
             if (resolve.name !== undefined) {
                 msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is online');
                 msg.reply(resolve.name + " is running map " + resolve.map + " and has " + resolve.playersnum + " players with " + resolve.botsnum + " of those being bots")
-                msg.reply("Click on the thumbs up emoji at the initial *** server_restart *** command to confirm the restart or thumbs down to cancel restart")
+                msg.reply('************************************************************')
+                resolve.playersnum > 0 ? msg.reply("Are you sure you want to restart server with " + resolve.playersnum + " players?"): console.log('No players so no need to ask again for server restart confirmation')
+                msg.reply("Click on the thumbs up emoji at the initial *** server_restart *** command to ** CONFIRM ** the restart or thumbs down to cancel restart")
 
                 msg.react('👍');
 
