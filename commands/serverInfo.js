@@ -1,12 +1,15 @@
 const cheerio = require('cheerio');
-const request = require('request-promise');
 const query = require("source-server-query");
+const axios = require("axios")
+
+async function fetchHTML(url) {
+    const { data } = await axios.get(url)
+    return cheerio.load(data)
+}
 
 async function serverInfo(queryName) {
-
     console.log("name to be searched is ", queryName[0])
-    const serverBrowserHtml = await request.get("https://refactor.jp/chivalry/");
-    const $ = cheerio.load(serverBrowserHtml);
+    const $ = await fetchHTML("https://refactor.jp/chivalry/")
     let nameToBeSearched = "";
     let serverWebpage = "";
     let lastUpdate = "";
@@ -63,8 +66,8 @@ async function serverInfo(queryName) {
         }
     });
 
-    const serverWebpageHtml = await request.get(serverWebpage);
-    const $webpage = cheerio.load(serverWebpageHtml);
+
+    const $webpage = await fetchHTML(serverWebpage);
 
     lastUpdate = $webpage("body > div.section > div.heading > div.contents > p.lastUpdate").text();
 
