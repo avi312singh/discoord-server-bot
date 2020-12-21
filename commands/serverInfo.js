@@ -9,7 +9,7 @@ async function fetchHTML(url) {
 
 async function serverInfo(queryName) {
     console.log("name to be searched is ", queryName[0])
-    const $ = await fetchHTML("https://refactor.jp/chivalry/")
+    const $ = await fetchHTML("https://refactor.jp/chivalry/?country=GB")
     let nameToBeSearched = "";
     let serverWebpage = "";
     let lastUpdate = "";
