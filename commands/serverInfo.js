@@ -65,7 +65,9 @@ async function serverInfo(queryName) {
         const playerAmountWithoutMaxPlayers = playerAmount.replace(/\/(.*)/g, "");
 
         if (serverName.includes(nameToBeSearched)) {
+            console.error("INSDE EACH LOOP serverInfo:****** ", serverInfo)
             serverInfo = { serverName: serverName, playerAmount: playerAmountWithoutMaxPlayers }
+            console.error("INSDE EACH LOOP serverWebpage:****** ", serverWebpage)
             serverWebpage = $(tds[2]) ? $(tds[2]).find('a').attr('href') : "server webpage not found";
         }
     });
