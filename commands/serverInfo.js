@@ -117,10 +117,10 @@ module.exports = {
                 }))
         })
             .catch(error => {
+                console.error("Error has occurred: ", error);
                 if (error === "is not recognised")
                     return msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not ours!')
                 else msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' is not online yet!')
-                console.error(error);
             }
             );
     }
