@@ -28,7 +28,7 @@ bot.on('ready', () => {
 });
 
 bot.on('message', msg => {
-  if (!message.content.startsWith(prefix)) return;
+  if (!msg.content.startsWith("!")) return;
 
   const args = msg.content.split(/ +/);
   const command = args.shift().toLowerCase();
