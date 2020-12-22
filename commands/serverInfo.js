@@ -89,7 +89,7 @@ async function serverInfo(queryName) {
 }
 
 module.exports = {
-    name: 'server_info',
+    name: '!server_info',
     description: 'Gets server info!',
     execute(msg, args) {
         serverInfo(args).then(resolve => {

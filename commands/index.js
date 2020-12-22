@@ -1,5 +1,5 @@
 module.exports = {
-  Ping: require('./ping'),
-  Serverinfo: require('./serverInfo'),
+  Help: require('./help'),
+  Server_info: require('./serverInfo'),
   Restart: require('./restart'),
 };

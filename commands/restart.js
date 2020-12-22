@@ -54,7 +54,7 @@ async function restartServer(queryName) {
 }
 
 module.exports = {
-    name: 'server_restart',
+    name: '!server_restart',
     description: 'Restarts a server!',
     execute(msg, args) {
         console.log(args)
