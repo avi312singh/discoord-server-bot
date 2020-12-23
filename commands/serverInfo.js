@@ -8,9 +8,12 @@ async function fetchHTML(url) {
 }
 
 async function serverInfo(queryName) {
+    const country = process.env.COUNTRY || "AT";
+    const serverIp = process.env.SERVERIP || (() => { throw new Error("Provide a server IP in env vars") });
+
     console.log("name to be searched is ", queryName[0])
-    await axios.get("https://refactor.jp/chivalry/?country=GB")
-    const $ = await fetchHTML("https://refactor.jp/chivalry/?country=GB")
+    await axios.get(`https://refactor.jp/chivalry/?country=${country}`)
+    const $ = await fetchHTML(`https://refactor.jp/chivalry/?country=${country}`)
     let nameToBeSearched = "";
     let serverWebpage = "";
     let lastUpdate = "";
@@ -23,7 +26,7 @@ async function serverInfo(queryName) {
             nameToBeSearched = "*** Fall To Your Death 24/7";
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7778, 2000)
+                    .info(serverIp, 7778, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
@@ -31,7 +34,7 @@ async function serverInfo(queryName) {
             nameToBeSearched = "*** Fall To Your Death 24/7";
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7778, 2000)
+                    .info(serverIp, 7778, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
@@ -39,7 +42,7 @@ async function serverInfo(queryName) {
             nameToBeSearched = "FallToYourDeath tests"
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7783, 2000)
+                    .info(serverIp, 7783, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
@@ -47,7 +50,7 @@ async function serverInfo(queryName) {
             nameToBeSearched = "FallToYourDeath tests"
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7783, 2000)
+                    .info(serverIp, 7783, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;

@@ -11,38 +11,36 @@ const serverRestartConfig = {
 };
 
 async function restartServer(queryName) {
-
     let directQueryInfo = {};
-
+    const serverIp = process.env.SERVERIP || (() => { throw new Error("Provide a server IP in env vars") });
 
     console.log("server to be restarted is ", queryName[0])
-
     switch (queryName[0]) {
         case "main":
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7778, 2000)
+                    .info(serverIp, 7778, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
         case "Main":
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7778, 2000)
+                    .info(serverIp, 7778, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
         case "test":
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7783, 2000)
+                    .info(serverIp, 7783, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
         case "Test":
             directQueryInfo =
                 query
-                    .info("77.68.16.178", 7783, 2000)
+                    .info(serverIp, 7783, 2000)
                     .then(result => directQueryInfo = result)
                     .catch(console.log);
             break;
