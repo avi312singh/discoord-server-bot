@@ -9,7 +9,7 @@ let allServerInfo = [];
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     console.log('Time: ', Date.now())
-    console.log("Served IP address:" + req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+    console.log("Served IP address: " + req.headers['x-forwarded-for'] || req.connection.remoteAddress)
     next()
 })
 // define the home page route
