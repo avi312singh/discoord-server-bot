@@ -5,6 +5,7 @@ const query = require("source-server-query");
 let directQueryInfo = {};
 let directPlayerInfo = [];
 let allServerInfo = [];
+const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
@@ -13,7 +14,7 @@ router.use(function timeLog(req, res, next) {
     next()
 })
 // define the home page route
-router.get('/', function (req, res) {
+router.get('/', async function (req, res) {
     directQueryInfo =
         await query
             .info(serverIp, 7778, 2000)
@@ -27,7 +28,7 @@ router.get('/', function (req, res) {
 
     allServerInfo.push({ directQueryInfo: directQueryInfo})
     allServerInfo.push({ directPlayerInfo: directPlayerInfo })
-    res.send('I will send server statistics here', allServerInfo)
+    res.status(200).send(allServerInfo)
 })
 
 module.exports = router
