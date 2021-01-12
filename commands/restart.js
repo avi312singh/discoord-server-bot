@@ -12,7 +12,7 @@ const serverRestartConfig = {
 
 async function restartServer(queryName) {
     let directQueryInfo = {};
-    const serverIp = process.env.SERVERIP || (() => { throw new Error("Provide a server IP in env vars") });
+    const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 
     console.log("server to be restarted is ", queryName[0])
     switch (queryName[0]) {
@@ -20,28 +20,28 @@ async function restartServer(queryName) {
             directQueryInfo =
                 query
                     .info(serverIp, 7778, 2000)
-                    .then(result => directQueryInfo = result)
+                    .then(query.close)
                     .catch(console.log);
             break;
         case "Main":
             directQueryInfo =
                 query
                     .info(serverIp, 7778, 2000)
-                    .then(result => directQueryInfo = result)
+                    .then(query.close)
                     .catch(console.log);
             break;
         case "test":
             directQueryInfo =
                 query
                     .info(serverIp, 7783, 2000)
-                    .then(result => directQueryInfo = result)
+                    .then(query.close)
                     .catch(console.log);
             break;
         case "Test":
             directQueryInfo =
                 query
                     .info(serverIp, 7783, 2000)
-                    .then(result => directQueryInfo = result)
+                    .then(query.close)
                     .catch(console.log);
             break;
         default:
@@ -95,6 +95,7 @@ module.exports = {
                         console.error("Error", collected);
                     });
             }
+            else msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is not online');
         })
             .catch(error => {
                 console.error(error);
