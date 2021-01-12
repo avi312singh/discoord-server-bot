@@ -11,7 +11,7 @@ const con = mysql.createConnection({
     password: password
 });
 
-con.connect(function (err) {
+con.connect((err) => {
     if (err) throw err;
     console.log("Connected!");
     con.end();
