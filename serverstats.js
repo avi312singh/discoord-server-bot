@@ -14,7 +14,7 @@ router.use(function timeLog(req, res, next) {
     next()
 })
 // define the home page route
-router.get('/', async function (req, res) {
+router.get('/', async (req, res) => {
     directQueryInfo =
         await query
             .info(serverIp, 7778, 2000)
@@ -26,10 +26,26 @@ router.get('/', async function (req, res) {
             .then(query.close)
             .catch(console.log);
 
-    allServerInfo.push({ directQueryInfo: directQueryInfo})
+    allServerInfo.push({ directQueryInfo: directQueryInfo })
     allServerInfo.push({ directPlayerInfo: directPlayerInfo })
     res.send(allServerInfo)
     allServerInfo = [];
+})
+
+router.post('/', async (req, res) => {
+    if (req.query.name && req.query.email && req.query.age) {
+        console.log('Request received');
+        con.connect((err) => {
+            if (err) res.send(err);
+            con.query(`INSERT INTO main.users (playerName, time, score, kills, deaths) VALUES ('${req.query.playerName}', '${req.query.time}', '${req.query.score}', '${req.query.kills}', '${req.query.deaths}')`, (err, result, fields) => {
+                if (err) res.send(err);
+                if (result) res.send({ playerName: req.query.playerName, time: req.query.time, score: req.query.score, kills: req.query.kills, deaths: req.query.deaths });
+                if (fields) console.log(fields);
+            });
+        });
+    } else {
+        console.log('Missing a parameter');
+    }
 })
 
 module.exports = router
