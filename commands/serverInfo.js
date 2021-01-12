@@ -127,9 +127,12 @@ module.exports = {
 
 
             msg.channel.send('*********** SERVER INFORMATION AS OF CURRENTLY ***********');
-            if (directQueryInfoObject || directQueryPlayerArray === undefined)
+            if (!directQueryInfoObject || !directQueryPlayerArray) {
+                console.log("server is not online");
                 msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is not online');
+            }
             else {
+                console.log("server is online");
                 if (directQueryInfoObject.name !== undefined) {
                     msg.reply(args[0].charAt(0).toUpperCase() + args[0].slice(1) + ' server is online');
                     msg.reply(directQueryInfoObject.name + " is running map " + directQueryInfoObject.map + " and has " + directQueryInfoObject.playersnum + " players with " + directQueryInfoObject.botsnum + " of those being bots")
