@@ -5,7 +5,7 @@ bot.commands = new Discord.Collection();
 const botCommands = require('./commands');
 const express = require('express');
 const app = express();
-const serverStats = require('./serverStats')
+const serverStats = require('./serverstats')
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
@@ -16,7 +16,7 @@ app.set('port', (process.env.PORT || 5000));
 
 app.use('/serverStats', serverStats)
 
-//For avoidong Heroku $PORT error
+//For avoiding Heroku $PORT error
 app.get('/', function (request, response) {
   var result = 'App is running'
   response.send(result);
