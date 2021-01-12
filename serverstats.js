@@ -29,6 +29,7 @@ router.get('/', async function (req, res) {
     allServerInfo.push({ directQueryInfo: directQueryInfo})
     allServerInfo.push({ directPlayerInfo: directPlayerInfo })
     res.send(allServerInfo)
+    allServerInfo = [];
 })
 
 module.exports = router
