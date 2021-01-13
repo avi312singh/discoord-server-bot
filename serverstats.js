@@ -2,7 +2,6 @@ var express = require('express')
 var router = express.Router()
 const query = require("source-server-query");
 const axios = require('axios');
-const cron = require('node-cron');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
@@ -12,7 +11,7 @@ const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api en
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
-    console.log('Time: ', Date.now())
+    console.log('Request received at: ', Date.now())
     console.log("Served IP address: " + req.headers['x-forwarded-for'] || req.connection.remoteAddress)
     next()
 })
@@ -40,13 +39,19 @@ router.post('/', async (req, res) => {
         console.log('Request received');
         con.connect((err) => {
             if (err) res.send(err);
-            con.query(`INSERT INTO main.users (playerName, time, score, kills, deaths) VALUES ('${req.query.playerName}', '${req.query.time}', '${req.query.score}', '${req.query.kills}', '${req.query.deaths}')`, (err, result, fields) => {
+            con.query(`INSERT INTO playerInfo (playerName, totalTime, totalKills, totalPointsSpent) VALUES ('${req.query.playerName}', '${req.query.totalTime}', '${req.query.totalKills}', '${req.query.totalPointsSpent}')`, (err, result, fields) => {
                 if (err) res.send(err);
-                if (result) res.send({ playerName: req.query.playerName, time: req.query.time, score: req.query.score, kills: req.query.kills, deaths: req.query.deaths });
+                if (result) res.send({ playerName: req.query.playerName, totalTime: req.query.totalTime, totalKills: req.query.totalKills, totalPointsSpent: req.query.totalPointsSpent });
+                if (fields) console.log(fields);
+            });
+            con.query(`UPDATE playerInfo SET totalTime = totalTime + 1 WHERE playerName = ${req.query.playerName}')`, (err, result, fields) => {
+                if (err) res.send(err);
+                if (result) res.send({ playerName: req.query.playerName, totalTime: req.query.totalTime });
                 if (fields) console.log(fields);
             });
         });
     } else {
+        res.send('Please provide playerName, totalTime, totalKills and totalPointsSpent in request')
         console.log('Missing a parameter');
     }
 })
@@ -75,7 +80,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     .catch(console.error)
                 oldPlayers = newPlayers;
                 newPlayers = [];
-                console.log('pausing for 20 seconds');
+                console.log('*** pausing for 20 seconds ***');
                 await timer(20000);
 
                 await axios.get(`${endpoint}serverstats`)
@@ -87,8 +92,9 @@ router.get('/repeatedRequests', async (req, res) => {
                     .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
                     .catch(console.error)
 
-
-                console.log(oldPlayers)
+                    // TODO: What params do we actually need to pass fo incrementing
+                    // TODO: restructure POST request to have a switch case to increment either points spent or kills... time is alwaysw incrememnted
+                    // TODO: UNIT TESTING
 
                 try {
                     for (i = 0; i < newPlayers.length; i++) {
@@ -96,12 +102,14 @@ router.get('/repeatedRequests', async (req, res) => {
                             let scoreDifference = 0;
                             if (newPlayers[i].score != oldPlayers[i].score) {
                                 if (newPlayers[i].score < oldPlayers[i].score) {
-                                    scoreDifference = newPlayers[i].score - oldPlayers[i].score
+                                    scoreDifference = oldPlayers[i].score - newPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                    await axios.post(`${endpoint}serverstatsrepeatedrequests?playerName=${newPlayers[i].name}&totalKills=123&totalPointsSpent=321`)
                                 }
                                 else if (newPlayers[i].score > oldPlayers[i].score) {
                                     scoreDifference = newPlayers[i].score - oldPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                    await axios.post(`${endpoint}serverstats`)
                                 }
                             }
                             else {
@@ -118,7 +126,6 @@ router.get('/repeatedRequests', async (req, res) => {
                 oldPlayers = [];
                 newPlayers = [];
 
-                // await axios.post
                 console.log('Completed this second at Time: ', Date.now());
 
             }
