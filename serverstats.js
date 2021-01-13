@@ -57,23 +57,26 @@ router.get('/repeatedRequests', async (req, res) => {
 
     res.send("initiating repeated requests")
 
-    var i = 1;
 
-    async function myLoop() {
+    const timer = ms => new Promise(res => setTimeout(res, ms))
+
+    async function repeatedRequests() {
         try {
-            console.log('running a new task ************************************************************************************************************************************************************');
-            await axios.get(`${endpoint}serverstats`)
-                .then(response => response.data)
-                .then(eachObject => (
-                    eachObject
-                        .map(element => element.directPlayerInfo)
-                        .filter(el => el != null)))
-                .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
-                .catch(console.error)
-            oldPlayers = newPlayers;
-            newPlayers = [];
-            console.log('pausing for 20 seconds');
-            setTimeout(async () => {
+
+            while (true) {
+                console.log('running a new task ************************************************************************************************************************************************************');
+                await axios.get(`${endpoint}serverstats`)
+                    .then(response => response.data)
+                    .then(eachObject => (
+                        eachObject
+                            .map(element => element.directPlayerInfo)
+                            .filter(el => el != null)))
+                    .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
+                    .catch(console.error)
+                oldPlayers = newPlayers;
+                newPlayers = [];
+                console.log('pausing for 20 seconds');
+                await timer(20000);
 
                 await axios.get(`${endpoint}serverstats`)
                     .then(response => response.data)
@@ -84,19 +87,32 @@ router.get('/repeatedRequests', async (req, res) => {
                     .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
                     .catch(console.error)
 
-                try {
-                    for (let i = 0; i < newPlayers.length; i++) {
-                        if (newPlayers[i].score != oldPlayers[i].score) {
-                            console.log(newPlayers[i].name + "'s score has changed ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
-                        }
-                        else {
-                            console.log(newPlayers[i].name + "'s score hasnt changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
 
+                console.log(oldPlayers)
+
+                try {
+                    for (i = 0; i < newPlayers.length; i++) {
+                        if (newPlayers[i].score) {
+                            let scoreDifference = 0;
+                            if (newPlayers[i].score != oldPlayers[i].score) {
+                                if (newPlayers[i].score < oldPlayers[i].score) {
+                                    scoreDifference = newPlayers[i].score - oldPlayers[i].score
+                                    console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                }
+                                else if (newPlayers[i].score > oldPlayers[i].score) {
+                                    scoreDifference = newPlayers[i].score - oldPlayers[i].score
+                                    console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                }
+                            }
+                            else {
+                                console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
+                            }
                         }
                     }
                 }
                 catch (error) {
                     console.error("Error processing this player: ", newPlayers[i].name + " " + error)
+                    continue;
                 }
 
                 oldPlayers = [];
@@ -105,18 +121,15 @@ router.get('/repeatedRequests', async (req, res) => {
                 // await axios.post
                 console.log('Completed this second at Time: ', Date.now());
 
-                i++;
-                if (i < 10) {
-                    myLoop();
-                }
-            }, 25000)
+            }
         }
         catch (error) {
             console.error("Error has occurred while executing repasted requests", error)
+            repeatedRequests();
         }
     }
 
-    myLoop();
+    repeatedRequests();
 })
 
 module.exports = router
