@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
     }
 })
 
-router.get('/repeatedRequests', async(req, res) => {
+router.get('/repeatedRequests', async (req, res) => {
     let oldPlayers = [];
     let newPlayers = [];
 
@@ -60,22 +60,8 @@ router.get('/repeatedRequests', async(req, res) => {
     var i = 1;
 
     async function myLoop() {
-        try{
-
-        console.log('running a new task ************************************************************************************************************************************************************');
-        await axios.get(`${endpoint}serverstats`)
-            .then(response => response.data)
-            .then(eachObject => (
-                eachObject
-                    .map(element => element.directPlayerInfo)
-                    .filter(el => el != null)))
-            .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
-            .catch(console.error)
-        oldPlayers = newPlayers;
-        newPlayers = [];
-        console.log('pausing for 20 seconds');
-        setTimeout(async () => {
-
+        try {
+            console.log('running a new task ************************************************************************************************************************************************************');
             await axios.get(`${endpoint}serverstats`)
                 .then(response => response.data)
                 .then(eachObject => (
@@ -84,15 +70,27 @@ router.get('/repeatedRequests', async(req, res) => {
                         .filter(el => el != null)))
                 .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
                 .catch(console.error)
+            oldPlayers = newPlayers;
+            newPlayers = [];
+            console.log('pausing for 20 seconds');
+            setTimeout(async () => {
+
+                await axios.get(`${endpoint}serverstats`)
+                    .then(response => response.data)
+                    .then(eachObject => (
+                        eachObject
+                            .map(element => element.directPlayerInfo)
+                            .filter(el => el != null)))
+                    .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
+                    .catch(console.error)
 
                 try {
-
                     for (let i = 0; i < newPlayers.length; i++) {
                         if (newPlayers[i].score != oldPlayers[i].score) {
                             console.log(newPlayers[i].name + "'s score has changed ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
                         }
                         else {
-                            console.log(newPlayers[i].name + "'s score hasnt changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score )
+                            console.log(newPlayers[i].name + "'s score hasnt changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
 
                         }
                     }
@@ -101,22 +99,22 @@ router.get('/repeatedRequests', async(req, res) => {
                     console.error("Error processing this player: ", newPlayers[i].name + " " + error)
                 }
 
-            oldPlayers = [];
-            newPlayers = [];
+                oldPlayers = [];
+                newPlayers = [];
 
-            // await axios.post
-            console.log('Completed this second at Time: ', Date.now());
+                // await axios.post
+                console.log('Completed this second at Time: ', Date.now());
 
-            i++;
-            if (i < 10) {
-                myLoop();
-            }
-        }, 25000)
+                i++;
+                if (i < 10) {
+                    myLoop();
+                }
+            }, 25000)
+        }
+        catch (error) {
+            console.error("Error has occurred while executing repasted requests", error)
+        }
     }
-    catch(error) {
-        console.error("Error has occurred while executing repasted requests", error)
-    }
-}
 
     myLoop();
 })
