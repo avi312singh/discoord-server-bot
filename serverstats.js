@@ -1,11 +1,14 @@
 var express = require('express')
 var router = express.Router()
 const query = require("source-server-query");
+const axios = require('axios');
+const cron = require('node-cron');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
 let allServerInfo = [];
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
+const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
@@ -46,6 +49,76 @@ router.post('/', async (req, res) => {
     } else {
         console.log('Missing a parameter');
     }
+})
+
+router.get('/repeatedRequests', async(req, res) => {
+    let oldPlayers = [];
+    let newPlayers = [];
+
+    res.send("initiating repeated requests")
+
+    var i = 1;
+
+    async function myLoop() {
+        try{
+
+        console.log('running a new task ************************************************************************************************************************************************************');
+        await axios.get(`${endpoint}serverstats`)
+            .then(response => response.data)
+            .then(eachObject => (
+                eachObject
+                    .map(element => element.directPlayerInfo)
+                    .filter(el => el != null)))
+            .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
+            .catch(console.error)
+        oldPlayers = newPlayers;
+        newPlayers = [];
+        console.log('pausing for 20 seconds');
+        setTimeout(async () => {
+
+            await axios.get(`${endpoint}serverstats`)
+                .then(response => response.data)
+                .then(eachObject => (
+                    eachObject
+                        .map(element => element.directPlayerInfo)
+                        .filter(el => el != null)))
+                .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
+                .catch(console.error)
+
+                try {
+
+                    for (let i = 0; i < newPlayers.length; i++) {
+                        if (newPlayers[i].score != oldPlayers[i].score) {
+                            console.log(newPlayers[i].name + "'s score has changed ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
+                        }
+                        else {
+                            console.log(newPlayers[i].name + "'s score hasnt changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score )
+
+                        }
+                    }
+                }
+                catch (error) {
+                    console.error("Error processing this player: ", newPlayers[i].name + " " + error)
+                }
+
+            oldPlayers = [];
+            newPlayers = [];
+
+            // await axios.post
+            console.log('Completed this second at Time: ', Date.now());
+
+            i++;
+            if (i < 10) {
+                myLoop();
+            }
+        }, 25000)
+    }
+    catch(error) {
+        console.error("Error has occurred while executing repasted requests", error)
+    }
+}
+
+    myLoop();
 })
 
 module.exports = router
