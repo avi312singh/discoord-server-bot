@@ -7,6 +7,10 @@ const mysql = require('mysql');
 let directQueryInfo = {};
 let directPlayerInfo = [];
 let allServerInfo = [];
+let running = false;
+let dateTimeRepeatedRequestsCalled;
+
+
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
@@ -168,104 +172,112 @@ router.post('/pointsSpent', async (req, res) => {
 
 
 router.get('/repeatedRequests', async (req, res) => {
-    let oldPlayers = [];
-    let newPlayers = [];
+    dateTimeRepeatedRequestsCalled = Date.now()
+    if (!running) {
+        running = true;
+        let oldPlayers = [];
+        let newPlayers = [];
 
-    res.send("initiating repeated requests")
+        res.send("initiating repeated requests")
 
+        const timer = ms => new Promise(res => setTimeout(res, ms))
 
-    const timer = ms => new Promise(res => setTimeout(res, ms))
+        async function repeatedRequests() {
+            try {
 
-    async function repeatedRequests() {
-        try {
+                while (true) {
+                    console.log('running a new task ************************************************************************************************************************************************************');
+                    await axios.get(`${endpoint}serverstats`)
+                        .then(response => response.data)
+                        .then(eachObject => (
+                            eachObject
+                                .map(element => element.directPlayerInfo)
+                                .filter(el => el != null)))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0].isArray() ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .catch(console.error)
+                    oldPlayers = newPlayers;
+                    newPlayers = [];
+                    console.log('*** pausing for 15 seconds ***');
+                    await timer(15000);
 
-            while (true) {
-                console.log('running a new task ************************************************************************************************************************************************************');
-                await axios.get(`${endpoint}serverstats`)
-                    .then(response => response.data)
-                    .then(eachObject => (
-                        eachObject
-                            .map(element => element.directPlayerInfo)
-                            .filter(el => el != null)))
-                    .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
-                    .catch(console.error)
-                oldPlayers = newPlayers;
-                newPlayers = [];
-                console.log('*** pausing for 15 seconds ***');
-                await timer(15000);
+                    await axios.get(`${endpoint}serverstats`)
+                        .then(response => response.data)
+                        .then(eachObject => (
+                            eachObject
+                                .map(element => element.directPlayerInfo)
+                                .filter(el => el != null)))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0].isArray() ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .catch(console.error)
 
-                await axios.get(`${endpoint}serverstats`)
-                    .then(response => response.data)
-                    .then(eachObject => (
-                        eachObject
-                            .map(element => element.directPlayerInfo)
-                            .filter(el => el != null)))
-                    .then(filteredResult => newPlayers = filteredResult[0] ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
-                    .catch(console.error)
+                    // TODO: UNIT TESTING
 
-                // TODO: UNIT TESTING
+                    try {
 
-                try {
-
-                    const checkIfPlayerIsHere = () => {
-                        for (i = 0; i < newPlayers.length; i++) {
-                            if(newPlayers.indexOf(oldPlayers[i]))
-                                return true;
+                        const checkIfPlayerIsHere = () => {
+                            for (i = 0; i < newPlayers.length; i++) {
+                                if (newPlayers.indexOf(oldPlayers[i]))
+                                    return true;
+                            }
                         }
-                    }
 
-                    for (i = 0; i < newPlayers.length; i++) {
-                        if (newPlayers[i].score && oldPlayers[i].score) {
-                            let scoreDifference = 0;
-                            if (oldPlayers[i].name == newPlayers[i].name || checkIfPlayerIsHere()) {
-                                if (newPlayers[i].score != oldPlayers[i].score) {
-                                    if (newPlayers[i].score < oldPlayers[i].score) {
-                                        scoreDifference = oldPlayers[i].score - newPlayers[i].score
-                                        console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                        await axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference}`)
-                                            .then(res => console.log('Database entry added/updated for pointsSpent endpoint!'))
+                        for (i = 0; i < newPlayers.length; i++) {
+                            if (newPlayers[i].score && oldPlayers[i].score) {
+                                let scoreDifference = 0;
+                                if (oldPlayers[i].name == newPlayers[i].name || checkIfPlayerIsHere()) {
+                                    if (newPlayers[i].score != oldPlayers[i].score) {
+                                        if (newPlayers[i].score < oldPlayers[i].score) {
+                                            scoreDifference = oldPlayers[i].score - newPlayers[i].score
+                                            console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                            await axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference}`)
+                                                .then(res => console.log('Database entry added/updated for pointsSpent endpoint!'))
 
+                                        }
+                                        else if (newPlayers[i].score > oldPlayers[i].score) {
+                                            scoreDifference = newPlayers[i].score - oldPlayers[i].score
+                                            console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                            await axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
+                                                .then(res => console.log('Database entry added/updated for kills endpoint!'))
+                                        }
                                     }
-                                    else if (newPlayers[i].score > oldPlayers[i].score) {
-                                        scoreDifference = newPlayers[i].score - oldPlayers[i].score
-                                        console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                        await axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
-                                            .then(res => console.log('Database entry added/updated for kills endpoint!'))
+                                    else {
+                                        console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
+                                        await axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
+                                            .then(res => console.log('Database entry added/updated for playerName endpoint!'))
                                     }
                                 }
                                 else {
-                                    console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
-                                    await axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
-                                        .then(res => console.log('Database entry added/updated for playerName endpoint!'))
+                                    console.log(newPlayers[i].name, " has left the server")
+                                    await axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[i].name}`)
+                                        .then(res => console.log('Database entry added/updated for lastLogin endpoint!'))
                                 }
-                            }
-                            else {
-                                console.log(newPlayers[i].name, " has left the server")
-                                await axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[i].name}`)
-                                    .then(res => console.log('Database entry added/updated for lastLogin endpoint!'))
                             }
                         }
                     }
+                    catch (error) {
+                        console.error("Error processing this player: ", newPlayers[i].name + " " + error)
+                        continue;
+                    }
+
+                    oldPlayers = [];
+                    newPlayers = [];
+
+                    console.log('Completed this second at Time: ', Date.now());
+
                 }
-                catch (error) {
-                    console.error("Error processing this player: ", newPlayers[i].name + " " + error)
-                    continue;
-                }
-
-                oldPlayers = [];
-                newPlayers = [];
-
-                console.log('Completed this second at Time: ', Date.now());
-
+            }
+            catch (error) {
+                console.error("Error has occurred while executing repeated requests", error)
+                repeatedRequests();
             }
         }
-        catch (error) {
-            console.error("Error has occurred while executing repasted requests", error)
-            repeatedRequests();
-        }
-    }
 
-    repeatedRequests();
+        repeatedRequests();
+
+    }
+    else {
+        console.log("Already running, restart dyno in heroku and call repeatedRequests again")
+        res.send("This endpoint has already been called and was called at ", dateTimeRepeatedRequestsCalled)
+    }
 })
 
 module.exports = router
