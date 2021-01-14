@@ -34,24 +34,36 @@ router.get('/', async (req, res) => {
     allServerInfo = [];
 })
 
-router.post('/', async (req, res) => {
-    if (req.query.name && req.query.email && req.query.age) {
-        console.log('Request received');
+router.post('/kills', async (req, res) => {
+    if (req.query.playerName && req.query.kills) {
+        console.log('Request received', req);
         con.connect((err) => {
             if (err) res.send(err);
-            con.query(`INSERT INTO playerInfo (playerName, totalTime, totalKills, totalPointsSpent) VALUES ('${req.query.playerName}', '${req.query.totalTime}', '${req.query.totalKills}', '${req.query.totalPointsSpent}')`, (err, result, fields) => {
+            con.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1`, (err, result, fields) => {
                 if (err) res.send(err);
-                if (result) res.send({ playerName: req.query.playerName, totalTime: req.query.totalTime, totalKills: req.query.totalKills, totalPointsSpent: req.query.totalPointsSpent });
-                if (fields) console.log(fields);
-            });
-            con.query(`UPDATE playerInfo SET totalTime = totalTime + 1 WHERE playerName = ${req.query.playerName}')`, (err, result, fields) => {
-                if (err) res.send(err);
-                if (result) res.send({ playerName: req.query.playerName, totalTime: req.query.totalTime });
+                if (result) res.send({ playerName: req.query.playerName, totalKills: req.query.totalKills });
                 if (fields) console.log(fields);
             });
         });
     } else {
-        res.send('Please provide playerName, totalTime, totalKills and totalPointsSpent in request')
+        res.send('Please provide playerName and kills in request')
+        console.log('Missing a parameter');
+    }
+})
+
+router.post('/pointsspent', async (req, res) => {
+    if (req.query.playerName && req.query.pointsSpent) {
+        console.log('Request received', req);
+        con.connect((err) => {
+            if (err) res.send(err);
+            con.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName}', ${req.query.totalPointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1`, (err, result, fields) => {
+                if (err) res.send(err);
+                if (result) res.send({ playerName: req.query.playerName, totalPointsSpent: req.query.totalPointsSpent });
+                if (fields) console.log(fields);
+            });
+        });
+    } else {
+        res.send('Please provide playerName and pointsSpent in request')
         console.log('Missing a parameter');
     }
 })
@@ -92,8 +104,8 @@ router.get('/repeatedRequests', async (req, res) => {
                     .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
                     .catch(console.error)
 
-                    // TODO: What params do we actually need to pass fo incrementing
-                    // TODO: restructure POST request to have a switch case to increment either points spent or kills... time is alwaysw incrememnted
+                    // TODO: What params do we actually need to pass for incrementing
+                    // TODO: restructure POST request to have a switch case to increment either points spent or kills... time is always incremented
                     // TODO: UNIT TESTING
 
                 try {
@@ -104,12 +116,12 @@ router.get('/repeatedRequests', async (req, res) => {
                                 if (newPlayers[i].score < oldPlayers[i].score) {
                                     scoreDifference = oldPlayers[i].score - newPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                    await axios.post(`${endpoint}serverstatsrepeatedrequests?playerName=${newPlayers[i].name}&totalKills=123&totalPointsSpent=321`)
+                                    await axios.post(`${endpoint}serverstats/pointspent?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
                                 }
                                 else if (newPlayers[i].score > oldPlayers[i].score) {
                                     scoreDifference = newPlayers[i].score - oldPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                    await axios.post(`${endpoint}serverstats`)
+                                    await axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
                                 }
                             }
                             else {
