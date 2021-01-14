@@ -193,7 +193,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             eachObject
                                 .map(element => element.directPlayerInfo)
                                 .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0].isArray() ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof(Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
                         .catch(console.error)
                     oldPlayers = newPlayers;
                     newPlayers = [];
@@ -206,7 +206,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             eachObject
                                 .map(element => element.directPlayerInfo)
                                 .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0].isArray() ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof(Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
                         .catch(console.error)
 
                     // TODO: UNIT TESTING
