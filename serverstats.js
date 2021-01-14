@@ -2,12 +2,18 @@ var express = require('express')
 var router = express.Router()
 const query = require("source-server-query");
 const axios = require('axios');
+const mysql = require('mysql');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
 let allServerInfo = [];
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
+const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
+const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
+const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
+const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
+
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
@@ -36,13 +42,27 @@ router.get('/', async (req, res) => {
 
 router.post('/kills', async (req, res) => {
     if (req.query.playerName && req.query.kills) {
-        console.log('Request received', req);
-        con.connect((err) => {
-            if (err) res.send(err);
-            con.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1`, (err, result, fields) => {
-                if (err) res.send(err);
-                if (result) res.send({ playerName: req.query.playerName, totalKills: req.query.totalKills });
+        console.log('Request received');
+        const connection = mysql.createConnection({
+            host: dbHost,
+            user: dbUsername,
+            password: dbPassword,
+            database: dbName
+        });
+        connection.connect((err) => {
+            if (err) console.log(err);
+            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1, totalKills = totalKills + 1`, (err, result, fields) => {
+                if (err) console.log(err);
+                if (result) {
+                    res.send({ playerName: req.query.playerName, kills: req.query.kills });
+                    console.log({ playerName: req.query.playerName, kills: req.query.kills })
+                }
                 if (fields) console.log(fields);
+            });
+            connection.end((err) => {
+                console.log("Connection terminated")
+                if(err)
+                    console.log("Error when closing connection", err)
             });
         });
     } else {
@@ -51,19 +71,64 @@ router.post('/kills', async (req, res) => {
     }
 })
 
-router.post('/pointsspent', async (req, res) => {
+router.post('/pointsSpent', async (req, res) => {
     if (req.query.playerName && req.query.pointsSpent) {
-        console.log('Request received', req);
-        con.connect((err) => {
-            if (err) res.send(err);
-            con.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName}', ${req.query.totalPointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1`, (err, result, fields) => {
-                if (err) res.send(err);
-                if (result) res.send({ playerName: req.query.playerName, totalPointsSpent: req.query.totalPointsSpent });
+        const connection = mysql.createConnection({
+            host: dbHost,
+            user: dbUsername,
+            password: dbPassword,
+            database: dbName
+        });
+        console.log('Request received');
+        connection.connect((err) => {
+            if (err) console.log(err);
+            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + 1, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
+                if (err) console.log(err);
+                if (result) {
+                    res.send({ playerName: req.query.playerName, pointsSpent: req.query.pointsSpent });
+                    console.log({ playerName: req.query.playerName, pointsSpent: req.query.pointsSpent})
+            }
                 if (fields) console.log(fields);
+            });
+            connection.end((err) => {
+                console.log("Connection terminated")
+                if (err)
+                    console.log("Error when closing connection", err)
             });
         });
     } else {
         res.send('Please provide playerName and pointsSpent in request')
+        console.log('Missing a parameter');
+    }
+})
+
+router.post('/', async (req, res) => {
+    if (req.query.playerName) {
+        console.log('Request received');
+        const connection = mysql.createConnection({
+            host: dbHost,
+            user: dbUsername,
+            password: dbPassword,
+            database: dbName
+        });
+        connection.connect((err) => {
+            if (err) console.log(err);
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${req.query.playerName}') ON DUPLICATE KEY UPDATE totalTime = totalTime + 1`, (err, result, fields) => {
+                if (err) console.log(err);
+                if (result) {
+                res.send({ playerName: req.query.playerName });
+                console.log({ playerName: req.query.playerName });
+            }
+                if (fields) console.log(fields);
+            });
+            connection.end((err) => {
+                console.log("Connection terminated")
+                if (err)
+                    console.log("Error when closing connection", err)
+            });
+        });
+    } else {
+        res.send('Please provide playerName in request')
         console.log('Missing a parameter');
     }
 })
@@ -92,8 +157,8 @@ router.get('/repeatedRequests', async (req, res) => {
                     .catch(console.error)
                 oldPlayers = newPlayers;
                 newPlayers = [];
-                console.log('*** pausing for 20 seconds ***');
-                await timer(20000);
+                console.log('*** pausing for 15 seconds ***');
+                await timer(15000);
 
                 await axios.get(`${endpoint}serverstats`)
                     .then(response => response.data)
@@ -104,8 +169,6 @@ router.get('/repeatedRequests', async (req, res) => {
                     .then(filteredResult => newPlayers = filteredResult[0].map(element => element))
                     .catch(console.error)
 
-                    // TODO: What params do we actually need to pass for incrementing
-                    // TODO: restructure POST request to have a switch case to increment either points spent or kills... time is always incremented
                     // TODO: UNIT TESTING
 
                 try {
@@ -116,16 +179,21 @@ router.get('/repeatedRequests', async (req, res) => {
                                 if (newPlayers[i].score < oldPlayers[i].score) {
                                     scoreDifference = oldPlayers[i].score - newPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                    await axios.post(`${endpoint}serverstats/pointspent?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
+                                    await axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference}`)
+                                        .then(res => console.log('Database entry added/updated!'))
+
                                 }
                                 else if (newPlayers[i].score > oldPlayers[i].score) {
                                     scoreDifference = newPlayers[i].score - oldPlayers[i].score
                                     console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
                                     await axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
+                                        .then(res => console.log('Database entry added/updated!'))
                                 }
                             }
                             else {
                                 console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
+                                await axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
+                                    .then(res => console.log('Database entry added/updated!'))
                             }
                         }
                     }
