@@ -51,7 +51,7 @@ router.post('/kills', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .15, totalKills = totalKills + 1`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + 1`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.send({ playerName: req.query.playerName, kills: req.query.kills });
@@ -82,7 +82,7 @@ router.post('/pointsSpent', async (req, res) => {
         console.log('Request received');
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .15, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.send({ playerName: req.query.playerName, pointsSpent: req.query.pointsSpent });
@@ -113,7 +113,7 @@ router.post('/', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${req.query.playerName}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .15`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${req.query.playerName}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                 res.send({ playerName: req.query.playerName });
