@@ -1,14 +1,15 @@
-var express = require('express')
-var router = express.Router()
+const express = require('express')
+const router = express.Router()
 const query = require("source-server-query");
 const axios = require('axios');
 const mysql = require('mysql');
+const moment = require('moment');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
 let allServerInfo = [];
 let running = false;
-let dateTimeRepeatedRequestsCalled;
+let timestamp;
 
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
@@ -172,11 +173,13 @@ router.post('/pointsSpent', async (req, res) => {
 
 
 router.get('/repeatedRequests', async (req, res) => {
-    dateTimeRepeatedRequestsCalled = Date.now()
     if (!running) {
         running = true;
         let oldPlayers = [];
         let newPlayers = [];
+
+        timestamp = moment().format('HH:mm:ss')
+
 
         res.send("initiating repeated requests")
 
@@ -255,7 +258,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     }
                     catch (error) {
                         console.error("Error processing this player: ", newPlayers[i].name + " " + error)
-                        continue;
+                        // repeatedRequests();
                     }
 
                     oldPlayers = [];
@@ -275,8 +278,17 @@ router.get('/repeatedRequests', async (req, res) => {
 
     }
     else {
-        console.log("Already running, restart dyno in heroku and call repeatedRequests again")
-        res.status(423).send("This endpoint has already been called and was called at ", dateTimeRepeatedRequestsCalled)
+        try {
+            console.log("Already running, restart endpoint/dyno in heroku and call repeatedRequests again")
+            res.status(404).json({
+                error: {
+                    message: "This endpoint has already been called and was called at: " + timestamp
+                }
+            });
+        }
+        catch(err) {
+            console.error(err)
+        }
     }
 })
 
