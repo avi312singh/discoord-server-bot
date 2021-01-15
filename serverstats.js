@@ -180,7 +180,6 @@ router.get('/repeatedRequests', async (req, res) => {
 
         timestamp = moment().format('HH:mm:ss')
 
-
         res.send("initiating repeated requests")
 
         const timer = ms => new Promise(res => setTimeout(res, ms))
@@ -196,12 +195,13 @@ router.get('/repeatedRequests', async (req, res) => {
                             eachObject
                                 .map(element => element.directPlayerInfo)
                                 .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof(Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
                         .catch(console.error)
                     oldPlayers = newPlayers;
                     newPlayers = [];
+
                     console.log('*** pausing for 15 seconds ***');
-                    await timer(15000);
+                    await timer(1500);
 
                     await axios.get(`${endpoint}serverstats`)
                         .then(response => response.data)
@@ -209,7 +209,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             eachObject
                                 .map(element => element.directPlayerInfo)
                                 .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof(Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
                         .catch(console.error)
 
                     // TODO: UNIT TESTING
@@ -223,8 +223,8 @@ router.get('/repeatedRequests', async (req, res) => {
                             }
                         }
 
-                        for (i = 0; i < newPlayers.length; i++) {
-                            if (newPlayers[i].score && oldPlayers[i].score) {
+                        if (!Array.isArray(newPlayers) || !newPlayers.length == 0) {
+                            for (i = 0; i < newPlayers.length; i++) {
                                 let scoreDifference = 0;
                                 if (oldPlayers[i].name == newPlayers[i].name || checkIfPlayerIsHere()) {
                                     if (newPlayers[i].score != oldPlayers[i].score) {
@@ -255,6 +255,9 @@ router.get('/repeatedRequests', async (req, res) => {
                                 }
                             }
                         }
+                        else {
+                            console.log("No one is on the server yet! New Players: " + JSON.stringify(newPlayers, null, 4))
+                        }
                     }
                     catch (error) {
                         console.error("Error processing this player: ", newPlayers[i].name + " " + error)
@@ -263,7 +266,6 @@ router.get('/repeatedRequests', async (req, res) => {
 
                     oldPlayers = [];
                     newPlayers = [];
-
                     console.log('Completed this second at Time: ', Date.now());
 
                 }
@@ -286,7 +288,7 @@ router.get('/repeatedRequests', async (req, res) => {
                 }
             });
         }
-        catch(err) {
+        catch (err) {
             console.error(err)
         }
     }
