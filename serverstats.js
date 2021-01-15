@@ -276,7 +276,7 @@ router.get('/repeatedRequests', async (req, res) => {
     }
     else {
         console.log("Already running, restart dyno in heroku and call repeatedRequests again")
-        res.send("This endpoint has already been called and was called at ", dateTimeRepeatedRequestsCalled)
+        res.status(423).send("This endpoint has already been called and was called at ", dateTimeRepeatedRequestsCalled)
     }
 })
 
