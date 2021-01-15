@@ -272,7 +272,7 @@ router.get('/repeatedRequests', async (req, res) => {
             }
             catch (error) {
                 console.error("Error has occurred while executing repeated requests", error)
-                repeatedRequests();
+                // repeatedRequests();
             }
         }
 
