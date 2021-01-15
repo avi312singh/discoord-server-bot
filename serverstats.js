@@ -201,7 +201,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     newPlayers = [];
 
                     console.log('*** pausing for 15 seconds ***');
-                    await timer(1500);
+                    await timer(15000);
 
                     await axios.get(`${endpoint}serverstats`)
                         .then(response => response.data)
