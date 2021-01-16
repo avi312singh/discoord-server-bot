@@ -3,6 +3,7 @@ const router = express.Router()
 const query = require("source-server-query");
 const axios = require('axios');
 const mysql = require('mysql');
+const chalk = require('chalk')
 const moment = require('moment');
 
 let directQueryInfo = {};
@@ -18,6 +19,10 @@ const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoi
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
+
+
+const timer = ms => new Promise(res => setTimeout(res, ms))
+const keyword = keyword => chalk.keyword('blue')(keyword)
 
 
 // middleware that is specific to this router
@@ -59,13 +64,15 @@ router.post('/', async (req, res) => {
             connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${req.query.playerName.replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
-                    res.send({ playerName: req.query.playerName });
+                    res.status(201).json({
+                        playerName: req.query.playerName
+                    });
+                    console.log(chalk.blue('Database entry added/updated for ' + chalk.whiteBright.underline(keyword(req.query.playerName.replace("'", "''"))) + ' endpoint!'))
                     console.log({ playerName: req.query.playerName });
                 }
                 if (fields) console.log(fields);
             });
             connection.end((err) => {
-                console.log("Connection terminated")
                 if (err)
                     console.log("Error when closing connection", err)
             });
@@ -91,13 +98,15 @@ router.post('/lastLogin', async (req, res) => {
             connection.query(`INSERT INTO playerInfo (playerName, lastLogin) VALUES ('${req.query.playerName.replace("'", "''")}', ${lastLogin}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
-                    res.send({ playerName: req.query.playerName });
+                    res.status(201).json({
+                        playerName: req.query.playerName, lastLogin: lastLogin
+                    });
+                    console.log(chalk.blue('Database entry added/updated for ' + chalk.whiteBright.underline(keyword(lastLogin)) + 'endpoint!'))
                     console.log({ playerName: req.query.playerName, lastLogin: lastLogin });
                 }
                 if (fields) console.log(fields);
             });
             connection.end((err) => {
-                console.log("Connection terminated")
                 if (err)
                     console.log("Error when closing connection", err)
             });
@@ -122,20 +131,21 @@ router.post('/kills', async (req, res) => {
             connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${req.query.playerName.replace("'", "''")}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + 1`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
-                    res.send({ playerName: req.query.playerName, kills: req.query.kills });
+                    res.status(201).json({
+                        playerName: req.query.playerName, kills: req.query.kills
+                    });
+                    console.log(chalk.blue('Database entry added/updated for ' + chalk.whiteBright.underline(keyword(req.query.kills)) + ' endpoint!'))
                     console.log({ playerName: req.query.playerName, kills: req.query.kills })
                 }
                 if (fields) console.log(fields);
             });
             connection.end((err) => {
-                console.log("Connection terminated")
                 if (err)
                     console.log("Error when closing connection", err)
             });
         });
     } else {
         res.send('Please provide playerName and kills in request')
-
         console.log('Missing a parameter');
     }
 })
@@ -154,13 +164,15 @@ router.post('/pointsSpent', async (req, res) => {
             connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${req.query.playerName.replace("'", "''")}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
-                    res.send({ playerName: req.query.playerName, pointsSpent: req.query.pointsSpent });
+                    res.status(201).json({
+                        playerName: req.query.playerName, pointsSpent: req.query.pointsSpent
+                    });
+                    console.log(chalk.blue('Database entry added/updated for ' + chalk.whiteBright.underline(keyword(req.query.pointsSpent)) + ' endpoint!'))
                     console.log({ playerName: req.query.playerName, pointsSpent: req.query.pointsSpent })
                 }
                 if (fields) console.log(fields);
             });
             connection.end((err) => {
-                console.log("Connection terminated")
                 if (err)
                     console.log("Error when closing connection", err)
             });
@@ -170,7 +182,6 @@ router.post('/pointsSpent', async (req, res) => {
         console.log('Missing a parameter');
     }
 })
-
 
 router.get('/repeatedRequests', async (req, res) => {
     if (!running) {
@@ -182,13 +193,10 @@ router.get('/repeatedRequests', async (req, res) => {
 
         res.send("initiating repeated requests")
 
-        const timer = ms => new Promise(res => setTimeout(res, ms))
-
         async function repeatedRequests() {
             try {
-
                 while (true) {
-                    console.log('running a new task ************************************************************************************************************************************************************');
+                    console.log(chalk.hex('#DEADED').bold('running a new task ************************************************************************************************************************************************************'));
                     await axios.get(`${endpoint}serverstats`)
                         .then(response => response.data)
                         .then(eachObject => (
@@ -200,7 +208,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     oldPlayers = newPlayers;
                     newPlayers = [];
 
-                    console.log('*** pausing for 15 seconds ***');
+                    console.log(chalk.hex('#DEADED').bold('*** pausing for 15 seconds ***'));
                     await timer(15000);
 
                     await axios.get(`${endpoint}serverstats`)
@@ -217,8 +225,8 @@ router.get('/repeatedRequests', async (req, res) => {
                     try {
 
                         const checkIfPlayerIsHere = () => {
-                            for (i = 0; i < newPlayers.length; i++) {
-                                if (newPlayers.indexOf(oldPlayers[i]))
+                            for (j = 0; j < newPlayers.length; j++) {
+                                if (newPlayers.indexOf(oldPlayers[j]))
                                     return true;
                             }
                         }
@@ -226,53 +234,60 @@ router.get('/repeatedRequests', async (req, res) => {
                         if (!Array.isArray(newPlayers) || !newPlayers.length == 0) {
                             for (i = 0; i < newPlayers.length; i++) {
                                 let scoreDifference = 0;
+                                let postRequests = [];
                                 if (oldPlayers[i].name == newPlayers[i].name || checkIfPlayerIsHere()) {
-                                    if (newPlayers[i].score != oldPlayers[i].score) {
-                                        if (newPlayers[i].score < oldPlayers[i].score) {
-                                            scoreDifference = oldPlayers[i].score - newPlayers[i].score
-                                            console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                            await axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference}`)
-                                                .then(res => console.log('Database entry added/updated for pointsSpent endpoint!'))
-
+                                    //  TODO: OLDPLAYERS IS THE PROBLEM CONSIDER LODASH GET
+                                    if (newPlayers[i].name !== "") {
+                                        if (newPlayers[i].score != oldPlayers[i].score) {
+                                            if (newPlayers[i].score < oldPlayers[i].score) {
+                                                scoreDifference = oldPlayers[i].score - newPlayers[i].score
+                                                console.log(newPlayers[i].name + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                                const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference}`)
+                                                postRequests.push(temp);
+                                            }
+                                            else if (newPlayers[i].score > oldPlayers[i].score) {
+                                                scoreDifference = newPlayers[i].score - oldPlayers[i].score
+                                                console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
+                                                const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
+                                                postRequests.push(temp)
+                                            }
                                         }
-                                        else if (newPlayers[i].score > oldPlayers[i].score) {
-                                            scoreDifference = newPlayers[i].score - oldPlayers[i].score
-                                            console.log(newPlayers[i].name + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                            await axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference}`)
-                                                .then(res => console.log('Database entry added/updated for kills endpoint!'))
+                                        else {
+                                            console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
+                                            const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
+                                            postRequests.push(temp)
                                         }
-                                    }
-                                    else {
-                                        console.log(newPlayers[i].name + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
-                                        await axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
-                                            .then(res => console.log('Database entry added/updated for playerName endpoint!'))
                                     }
                                 }
                                 else {
                                     console.log(newPlayers[i].name, " has left the server")
-                                    await axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[i].name}`)
-                                        .then(res => console.log('Database entry added/updated for lastLogin endpoint!'))
+                                    const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[i].name}`)
+                                    postRequests.push(temp)
                                 }
                             }
+                            // console.log("ABout to be sent: ", postRequests)
+                            Promise.all(postRequests)
+                                .then(console.log)
+                                .catch(console.error)
                         }
                         else {
-                            console.log("No one is on the server yet! New Players: " + JSON.stringify(newPlayers, null, 4))
+                            console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
                         }
                     }
                     catch (error) {
-                        console.error("Error processing this player: ", newPlayers[i].name + " " + error)
+                        console.error(chalk.red("Error processing this player: ", newPlayers[i].name ? keyword(newPlayers[i].name) : " Error while getting player: " + " " + error))
                         // repeatedRequests();
                     }
 
                     oldPlayers = [];
                     newPlayers = [];
-                    console.log('Completed this second at Time: ', Date.now());
+                    console.log(chalk.blueBright('Completed this second at Time: ', Date.now()));
 
                 }
             }
             catch (error) {
-                console.error("Error has occurred while executing repeated requests", error)
-                // repeatedRequests();
+                console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
+                repeatedRequests();
             }
         }
 
