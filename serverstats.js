@@ -242,110 +242,124 @@ router.get('/repeatedRequests', async (req, res) => {
 
         async function repeatedRequests() {
             try {
+                const serverInfo = await axios.get(`${endpoint}serverstats`)
+                    .then(response => response.data)
+                    .then(eachObject => (
+                        eachObject
+                            .map(element => element.directQueryInfo)
+                            .filter(el => el != null)))
                 while (true) {
-                    console.log(chalk.hex('#DEADED').bold('running a new task ************************************************************************************************************************************************************'));
-                    await axios.get(`${endpoint}serverstats`)
-                        .then(response => response.data)
-                        .then(eachObject => (
-                            eachObject
-                                .map(element => element.directPlayerInfo)
-                                .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
-                        .catch(console.error)
-                    oldPlayers = newPlayers;
-                    newPlayers = [];
+                    if (serverInfo[0].name) {
 
-                    console.log(chalk.hex('#DEADED').bold('*** pausing for 15 seconds ***'));
-                    await timer(15000);
+                        console.log(chalk.hex('#DEADED').bold('running a new task ************************************************************************************************************************************************************'));
+                        await axios.get(`${endpoint}serverstats`)
+                            .then(response => response.data)
+                            .then(eachObject => (
+                                eachObject
+                                    .map(element => element.directPlayerInfo)
+                                    .filter(el => el != null)))
+                            .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                            .catch(console.error)
+                        oldPlayers = newPlayers;
+                        newPlayers = [];
 
-                    await axios.get(`${endpoint}serverstats`)
-                        .then(response => response.data)
-                        .then(eachObject => (
-                            eachObject
-                                .map(element => element.directPlayerInfo)
-                                .filter(el => el != null)))
-                        .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
-                        .catch(console.error)
+                        console.log(chalk.hex('#DEADED').bold('*** pausing for 15 seconds ***'));
+                        await timer(15000);
+
+                        await axios.get(`${endpoint}serverstats`)
+                            .then(response => response.data)
+                            .then(eachObject => (
+                                eachObject
+                                    .map(element => element.directPlayerInfo)
+                                    .filter(el => el != null)))
+                            .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
+                            .catch(console.error)
 
 
-                    // TODO: UNIT TESTING
-                    //  TODO: OLDPLAYERS IS THE PROBLEM CONSIDER LODASH GET
-                    // TODO: INDEX GETS MESSED UP WHEN PLAYERS JOIN AND LEAVE SERVER. JUST USE LOADS GET ON PLAYER NAME IN COMPARISON INSTEAD OF USING INDEX DIRECTLY
-                    // TODO :need to create case for when there's a length mismatch and make wsure new plqyers hit time endpoint and players left hit lastlogin
+                        // TODO: UNIT TESTING
+                        //  TODO: OLDPLAYERS IS THE PROBLEM CONSIDER LODASH GET
+                        // TODO: INDEX GETS MESSED UP WHEN PLAYERS JOIN AND LEAVE SERVER. JUST USE LOADS GET ON PLAYER NAME IN COMPARISON INSTEAD OF USING INDEX DIRECTLY
+                        // TODO :need to create case for when there's a length mismatch and make wsure new plqyers hit time endpoint and players left hit lastlogin
 
-                    const checkIfPlayerIsHere = () => {
-                        for (j = 0; j < newPlayers.length; j++) {
-                            if (newPlayers.indexOf(oldPlayers[j]))
-                                return true;
+                        const checkIfPlayerIsHere = () => {
+                            for (j = 0; j < newPlayers.length; j++) {
+                                if (newPlayers.indexOf(oldPlayers[j]))
+                                    return true;
+                            }
                         }
-                    }
 
-                    try {
+                        try {
 
-                        if (!Array.isArray(newPlayers) || !newPlayers.length == 0) {
-                            for (i = 0; i < newPlayers.length; i++) {
-                                let scoreDifference = 0;
+                            if (!Array.isArray(newPlayers) || !newPlayers.length == 0 || serverInfo[0].playersnum != 0) {
+                                for (i = 0; i < newPlayers.length; i++) {
+                                    let scoreDifference = 0;
 
-                                // MIGHT NEED  INDEX FOR OLDPLAERS AND NEW PLAYERS AS THEY  ARE 2 DIFFERENT ARRAYS WITH POSSIBLY DIFFERENT PLAYERS AND INDEXES PER ITERATION
-                                newPlayerIndex = _.findIndex(newPlayers,{ name: oldPlayers[i].name })
-                                oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name })
+                                    // MIGHT NEED  INDEX FOR OLDPLAYERS AND NEW PLAYERS AS THEY  ARE 2 DIFFERENT ARRAYS WITH POSSIBLY DIFFERENT PLAYERS AND INDEXES PER ITERATION
+                                    // NOT SURE IF NEEDE THE ternary FALSE statement
+                                    newPlayerIndex = _.findIndex(newPlayers, { name: oldPlayers[i].name }) != 1 ? _.findIndex(newPlayers, { name: oldPlayers[i].name }) : _.findIndex(newPlayers, { name: newPlayers[i].name })
+                                    oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name }) != -1 ? _.findIndex(oldPlayers, { name: newPlayers[i].name }) : _.findIndex(oldPlayers, { name: oldPlayers[i].name })
 
 
-                                //  UNCOMMENT FOR DEBUGGING
-                                // console.log(chalk.greenBright(JSON.stringify(newPlayers, null, 4)))
-                                // console.log(chalk.greenBright(JSON.stringify(newPlayers[i].name, null, 4)))
-                                // console.log(chalk.greenBright(JSON.stringify(oldPlayers[i].name, null, 4)))
-                                console.log(chalk.greenBright(newPlayerIndex))
-                                console.log(chalk.greenBright(oldPlayerIndex))
+                                    //  UNCOMMENT FOR DEBUGGING
+                                    // console.log(chalk.greenBright(JSON.stringify(newPlayers, null, 4)))
+                                    // console.log(chalk.greenBright(JSON.stringify(oldPlayers, null, 4)))
+                                    // console.log(chalk.greenBright(JSON.stringify(newPlayers[i].name, null, 4)))
+                                    // console.log(chalk.greenBright(JSON.stringify(oldPlayers[i].name, null, 4)))
+                                    // console.log(chalk.greenBright(newPlayerIndex))
+                                    // console.log(chalk.greenBright(oldPlayerIndex))
 
-                                if (oldPlayers[oldPlayerIndex].name == newPlayers[newPlayerIndex].name || checkIfPlayerIsHere()) {
-                                    if (newPlayers[newPlayerIndex].name !== "") {
-                                        if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
-                                            if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
-                                                scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
-                                                console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
-                                                const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
-                                                postRequests.push(temp);
+                                    if (oldPlayers[oldPlayerIndex].name == newPlayers[newPlayerIndex].name || checkIfPlayerIsHere()) {
+                                        if (newPlayers[newPlayerIndex].name !== "") {
+                                            if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
+                                                if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
+                                                    scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
+                                                    console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                                    const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
+                                                    postRequests.push(temp);
+                                                }
+                                                else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
+                                                    scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
+                                                    console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                                    const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
+                                                    postRequests.push(temp)
+                                                }
                                             }
-                                            else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
-                                                scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
-                                                console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
-                                                const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
+                                            else {
+                                                console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
+                                                const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
                                                 postRequests.push(temp)
                                             }
                                         }
-                                        else {
-                                            console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
-                                            const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
-                                            postRequests.push(temp)
-                                        }
+                                    }
+                                    else {
+                                        console.log(utf8.decode(oldPlayers[oldPlayerIndex].name), " has left the server")
+                                        const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${oldPlayers[oldPlayerIndex].name}`)
+                                        postRequests.push(temp)
                                     }
                                 }
-                                else {
-                                    console.log(utf8.decode(newPlayers[newPlayerIndex].name), " has left the server")
-                                    const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[newPlayerIndex].name}`)
-                                    postRequests.push(temp)
-                                }
+
+                                // Send all endpoint requests from above
+                                Promise.all(postRequests)
+                                    .catch(console.error)
+
                             }
-
-                            // Send all endpoint requests from above
-                            Promise.all(postRequests)
-                                .catch(console.error)
-
+                            else {
+                                console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
+                            }
                         }
-                        else {
-                            console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
+                        catch (error) {
+                            console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
+                            // repeatedRequests();
                         }
-                    }
-                    catch (error) {
-                        console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
-                        // repeatedRequests();
-                    }
 
-                    oldPlayers = [];
-                    newPlayers = [];
-                    console.log(chalk.blueBright('Completed this second at Time: ', Date.now()));
+                        oldPlayers = [];
+                        newPlayers = [];
+                        console.log(chalk.blueBright('Completed this second at Time: ', Date.now()));
 
+                    }
+                    else {
+                        console.log(chalk.magentaBright("Server not online!"))
+                    }
                 }
             }
             catch (error) {
