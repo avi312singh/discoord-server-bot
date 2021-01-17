@@ -7,6 +7,7 @@ const chalk = require('chalk');
 const utf8 = require('utf8');
 const cron = require('node-cron');
 const moment = require('moment');
+const _ = require('underscore');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
@@ -14,6 +15,9 @@ let allServerInfo = [];
 let running = false;
 let timestamp;
 let timestampForRequest;
+let newPlayerIndex;
+let oldPlayerIndex;
+let postRequests = [];
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
@@ -69,7 +73,7 @@ router.post('/', async (req, res) => {
                         playerName: utf8.decode(req.query.playerName)
                     })
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8.decode(req.query.playerName).replace("'", "''"))) + ' added/updated for time addition endpoint!'))
-                    console.log({ playerName: utf8.decode(req.query.playerName )})
+                    console.log({ playerName: utf8.decode(req.query.playerName) })
                 }
                 if (fields) console.log(fields);
             });
@@ -222,7 +226,8 @@ router.get('/repeatedRequests', async (req, res) => {
         timestamp = moment().format('HH:mm:ss')
 
         res.status(200).json({
-            message: "Initiating repeated requests ", timestamp})
+            message: "Initiating repeated requests ", timestamp
+        })
 
         cron.schedule('* * * * *', async () => {
             const serverInfo = await axios.get(`${endpoint}serverstats`)
@@ -263,57 +268,68 @@ router.get('/repeatedRequests', async (req, res) => {
                         .catch(console.error)
 
 
-
-
                     // TODO: UNIT TESTING
+                    //  TODO: OLDPLAYERS IS THE PROBLEM CONSIDER LODASH GET
+                    // TODO: INDEX GETS MESSED UP WHEN PLAYERS JOIN AND LEAVE SERVER. JUST USE LOADS GET ON PLAYER NAME IN COMPARISON INSTEAD OF USING INDEX DIRECTLY
+                    // TODO :need to create case for when there's a length mismatch and make wsure new plqyers hit time endpoint and players left hit lastlogin
+
+                    const checkIfPlayerIsHere = () => {
+                        for (j = 0; j < newPlayers.length; j++) {
+                            if (newPlayers.indexOf(oldPlayers[j]))
+                                return true;
+                        }
+                    }
 
                     try {
-
-                        const checkIfPlayerIsHere = () => {
-                            for (j = 0; j < newPlayers.length; j++) {
-                                if (newPlayers.indexOf(oldPlayers[j]))
-                                    return true;
-                            }
-                        }
 
                         if (!Array.isArray(newPlayers) || !newPlayers.length == 0) {
                             for (i = 0; i < newPlayers.length; i++) {
                                 let scoreDifference = 0;
-                                let postRequests = [];
-                                if (oldPlayers[i].name == newPlayers[i].name || checkIfPlayerIsHere()) {
-                                    //  TODO: OLDPLAYERS IS THE PROBLEM CONSIDER LODASH GET
-                                    // TODO: INDEX GETS MESSED UP WHEN PLAYERS JOIN AND LEAVE SERVER. JUST USE LOADS GET ON PLAYER NAME IN COMPARISON INSTEAD OF USING INDEX DIRECTLY
-                                    if (newPlayers[i].name !== "") {
-                                        if (newPlayers[i].score != oldPlayers[i].score) {
-                                            if (newPlayers[i].score < oldPlayers[i].score) {
-                                                scoreDifference = oldPlayers[i].score - newPlayers[i].score
-                                                console.log(utf8.decode(newPlayers[i].name) + "'s score is less than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                                const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[i].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
+
+                                // MIGHT NEED  INDEX FOR OLDPLAERS AND NEW PLAYERS AS THEY  ARE 2 DIFFERENT ARRAYS WITH POSSIBLY DIFFERENT PLAYERS AND INDEXES PER ITERATION
+                                newPlayerIndex = _.findIndex(newPlayers,{ name: oldPlayers[i].name })
+                                oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name })
+
+
+                                //  UNCOMMENT FOR DEBUGGING
+                                // console.log(chalk.greenBright(JSON.stringify(newPlayers, null, 4)))
+                                // console.log(chalk.greenBright(JSON.stringify(newPlayers[i].name, null, 4)))
+                                // console.log(chalk.greenBright(JSON.stringify(oldPlayers[i].name, null, 4)))
+                                console.log(chalk.greenBright(newPlayerIndex))
+                                console.log(chalk.greenBright(oldPlayerIndex))
+
+                                if (oldPlayers[oldPlayerIndex].name == newPlayers[newPlayerIndex].name || checkIfPlayerIsHere()) {
+                                    if (newPlayers[newPlayerIndex].name !== "") {
+                                        if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
+                                            if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
+                                                scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
+                                                console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                                const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
                                                 postRequests.push(temp);
                                             }
-                                            else if (newPlayers[i].score > oldPlayers[i].score) {
-                                                scoreDifference = newPlayers[i].score - oldPlayers[i].score
-                                                console.log(utf8.decode(newPlayers[i].name) + "'s score is more than the old one as ******** new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score + " with difference " + scoreDifference)
-                                                const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[i].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference/2 : scoreDifference}`)
+                                            else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
+                                                scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
+                                                console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                                const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
                                                 postRequests.push(temp)
                                             }
                                         }
                                         else {
-                                            console.log(utf8.decode(newPlayers[i].name) + "'s score hasn't changed ******** because new score is " + newPlayers[i].score + " and old score is " + oldPlayers[i].score)
-                                            const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[i].name}`)
+                                            console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
+                                            const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
                                             postRequests.push(temp)
                                         }
                                     }
                                 }
                                 else {
-                                    console.log(utf8.decode(newPlayers[i].name), " has left the server")
-                                    const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[i].name}`)
+                                    console.log(utf8.decode(newPlayers[newPlayerIndex].name), " has left the server")
+                                    const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${newPlayers[newPlayerIndex].name}`)
                                     postRequests.push(temp)
                                 }
                             }
-                            // console.log("ABout to be sent: ", postRequests)
+
+                            // Send all endpoint requests from above
                             Promise.all(postRequests)
-                                .then(console.log)
                                 .catch(console.error)
 
                         }
@@ -322,7 +338,7 @@ router.get('/repeatedRequests', async (req, res) => {
                         }
                     }
                     catch (error) {
-                        console.error(chalk.red("Error processing this player: ", newPlayers[i].name ? keyword(utf8.decode(newPlayers[i].name)) : " Error while getting player: " + " " + error))
+                        console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
                         // repeatedRequests();
                     }
 
