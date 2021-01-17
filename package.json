@@ -18,6 +18,8 @@
     "heroku": "^7.47.6",
     "moment": "^2.29.1",
     "mysql": "^2.18.1",
-    "source-server-query": "^1.0.1"
+    "node-cron": "^2.0.3",
+    "source-server-query": "^1.0.1",
+    "utf8": "^3.0.0"
   }
 }
