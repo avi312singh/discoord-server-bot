@@ -241,7 +241,7 @@ router.get('/repeatedRequests', async (req, res) => {
         });
 
         async function repeatedRequests() {
-            try {
+            // try {
                 const serverInfo = await axios.get(`${endpoint}serverstats`)
                     .then(response => response.data)
                     .then(eachObject => (
@@ -278,7 +278,7 @@ router.get('/repeatedRequests', async (req, res) => {
                         // TODO: UNIT TESTING
                         // TODO: FIX WHEN PLAYERS JOIN SERVER
 
-                        try {
+                        // try {
 
                             // Remove entries where they have just joined and server hasn't loaded name yet
                             oldPlayers = oldPlayers.filter(el => el.name !== '' || undefined)
@@ -310,41 +310,26 @@ router.get('/repeatedRequests', async (req, res) => {
                                 while (y--) {
                                     const playerHasJoined = _.findIndex(oldPlayers, { name: newPlayers[y].name }) === -1 ? true : false;
                                     if (playerHasJoined) {
-                                        console.log(utf8.decode(newPlayers[z].name), " has joined the server")
+                                        console.log(utf8.decode(newPlayers[y].name), " has joined the server")
                                         const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[y].name}`)
                                         postRequests.push(temp)
                                         // remove from array
-                                        const index = newPlayers.indexOf(newPlayers[y].name);
-                                        if (index > -1) {
-                                            newPlayers.splice(index, 1);
+                                        const findIndex = _.findIndex(newPlayers, { name: newPlayers[y].name })
+
+                                        if (findIndex > -1) {
+                                            newPlayers.splice(findIndex, 1);
                                         }
                                     }
                                 }
                             }
 
                             if (!Array.isArray(newPlayers) || !newPlayers.length == 0 || serverInfo[0].playersnum >= 0) {
-
                                 for (i = 0; i < newPlayers.length; i++) {
 
                                     let scoreDifference = 0;
 
                                     newPlayerIndex = _.findIndex(newPlayers, { name: oldPlayers[i].name }) != -1 ? _.findIndex(newPlayers, { name: oldPlayers[i].name }) : _.findIndex(newPlayers, { name: newPlayers[i].name })
                                     oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name }) != -1 ? _.findIndex(oldPlayers, { name: newPlayers[i].name }) : _.findIndex(oldPlayers, { name: oldPlayers[i].name })
-
-
-
-                                    //  UNCOMMENT FOR DEBUGGING
-                                    // console.log(chalk.greenBright("Index difference " + indexDifference))
-                                    // console.log(chalk.greenBright("Names to be searched " + newPlayers[i].name + " INSIDE " + oldPlayers))
-                                    // console.log(chalk.greenBright(JSON.stringify(newPlayers, null, 4)))
-                                    // console.log(chalk.greenBright(JSON.stringify(oldPlayers, null, 4)))
-                                    // console.log(chalk.greenBright(newPlayerIndex))
-                                    // console.log(chalk.greenBright(oldPlayerIndex))
-                                    // console.log(chalk.greenBright(JSON.stringify(newPlayers[newPlayerIndex].name, null, 4)))
-                                    // console.log(chalk.greenBright(JSON.stringify(oldPlayers[oldPlayerIndex].name, null, 4)))
-                                    // console.log(chalk.greenBright(newPlayers.length))
-                                    // console.log(chalk.greenBright(oldPlayers.length))
-
 
                                     if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
                                         if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
@@ -375,11 +360,11 @@ router.get('/repeatedRequests', async (req, res) => {
                             else {
                                 console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
                             }
-                        }
-                        catch (error) {
-                            console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
+                        // }
+                        // catch (error) {
+                            // console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
                             // repeatedRequests();
-                        }
+                        // }
 
                         oldPlayers = [];
                         newPlayers = [];
@@ -391,12 +376,12 @@ router.get('/repeatedRequests', async (req, res) => {
                         console.log(chalk.magentaBright("Server not online!"))
                     }
                 }
-            }
-            catch (error) {
-                console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
-                console.trace()
-                repeatedRequests();
-            }
+            // }
+            // catch (error) {
+                // console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
+                // console.trace()
+                // repeatedRequests();
+            // }
         }
 
         repeatedRequests();
