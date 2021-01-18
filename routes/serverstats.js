@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
 
     allServerInfo.push({ directQueryInfo: directQueryInfo })
     allServerInfo.push({ directPlayerInfo: directPlayerInfo })
-    res.send(allServerInfo)
+    res.status(200).json(allServerInfo)
     allServerInfo = [];
 })
 

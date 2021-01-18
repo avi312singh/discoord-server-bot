@@ -5,7 +5,7 @@ bot.commands = new Discord.Collection();
 const botCommands = require('./commands');
 const express = require('express');
 const app = express();
-const serverStats = require('./serverstats')
+const serverStats = require('./routes/serverstats')
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
