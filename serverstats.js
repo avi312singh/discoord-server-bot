@@ -241,7 +241,7 @@ router.get('/repeatedRequests', async (req, res) => {
         });
 
         async function repeatedRequests() {
-            // try {
+            try {
                 const serverInfo = await axios.get(`${endpoint}serverstats`)
                     .then(response => response.data)
                     .then(eachObject => (
@@ -274,11 +274,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
                             .catch(console.error)
 
-
-                        // TODO: UNIT TESTING
-                        // TODO: FIX WHEN PLAYERS JOIN SERVER
-
-                        // try {
+                        try {
 
                             // Remove entries where they have just joined and server hasn't loaded name yet
                             oldPlayers = oldPlayers.filter(el => el.name !== '' || undefined)
@@ -293,8 +289,8 @@ router.get('/repeatedRequests', async (req, res) => {
                                     const playerHasLeft = _.findIndex(newPlayers, { name: oldPlayers[z].name }) === -1 ? true : false;
                                     if (playerHasLeft) {
                                         console.log(utf8.decode(oldPlayers[z].name) + " has left the server")
-                                        const temp = axios.post(`${endpoint}serverstats/lastLogin?playerName=${oldPlayers[z].name}`)
-                                        postRequests.push(temp)
+                                        const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?playerName=${oldPlayers[z].name}`)
+                                        postRequests.push(endpointRequest)
                                         // remove from array
                                         const index = oldPlayers.indexOf(oldPlayers[z].name);
                                         if (index > -1) {
@@ -311,8 +307,8 @@ router.get('/repeatedRequests', async (req, res) => {
                                     const playerHasJoined = _.findIndex(oldPlayers, { name: newPlayers[y].name }) === -1 ? true : false;
                                     if (playerHasJoined) {
                                         console.log(utf8.decode(newPlayers[y].name), " has joined the server")
-                                        const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[y].name}`)
-                                        postRequests.push(temp)
+                                        const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[y].name}`)
+                                        postRequests.push(endpointRequest)
                                         // remove from array
                                         const findIndex = _.findIndex(newPlayers, { name: newPlayers[y].name })
 
@@ -335,20 +331,20 @@ router.get('/repeatedRequests', async (req, res) => {
                                         if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
                                             console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
-                                            const temp = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
-                                            postRequests.push(temp);
+                                            const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
+                                            postRequests.push(endpointRequest);
                                         }
                                         else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
                                             console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
-                                            const temp = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
-                                            postRequests.push(temp)
+                                            const endpointRequest = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
+                                            postRequests.push(endpointRequest)
                                         }
                                     }
                                     else {
                                         console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
-                                        const temp = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
-                                        postRequests.push(temp)
+                                        const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
+                                        postRequests.push(endpointRequest)
                                     }
                                 }
 
@@ -360,32 +356,28 @@ router.get('/repeatedRequests', async (req, res) => {
                             else {
                                 console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
                             }
-                        // }
-                        // catch (error) {
-                            // console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
-                            // repeatedRequests();
-                        // }
-
+                        }
+                        catch (error) {
+                            console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
+                            repeatedRequests();
+                        }
                         oldPlayers = [];
                         newPlayers = [];
                         const completedNow = moment().format('HH:mm:ss')
                         console.log(chalk.blue('Completed this second at Time: ', chalk.blueBright(completedNow)));
-
                     }
                     else {
                         console.log(chalk.magentaBright("Server not online!"))
                     }
                 }
-            // }
-            // catch (error) {
-                // console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
-                // console.trace()
-                // repeatedRequests();
-            // }
+            }
+            catch (error) {
+                console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
+                console.trace()
+                repeatedRequests();
+            }
         }
-
         repeatedRequests();
-
     }
     else {
         try {
