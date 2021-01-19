@@ -27,9 +27,9 @@ const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db pa
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 
-
 const timer = ms => new Promise(res => setTimeout(res, ms))
 const keyword = keyword => chalk.keyword('blue')(keyword)
+const utf8decode = stringTOBeDecoded => utf8.decode(stringTOBeDecoded)
 
 const dir = './logging/'
 
@@ -82,14 +82,14 @@ router.post('/', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8.decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
-                        playerName: utf8.decode(req.query.playerName)
+                        playerName: utf8decode(req.query.playerName)
                     })
-                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8.decode(req.query.playerName).replace("'", "''"))) + ' added/updated for time addition endpoint!'))
-                    console.log({ playerName: utf8.decode(req.query.playerName) })
+                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8decode(req.query.playerName).replace("'", "''"))) + ' added/updated for time addition endpoint!'))
+                    console.log({ playerName: utf8decode(req.query.playerName) })
                 }
                 if (fields) console.log(fields);
             });
@@ -115,14 +115,14 @@ router.post('/lastLogin', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8.decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
-                        playerName: utf8.decode(req.query.playerName), lastLogin: timestampForLastLogin
+                        playerName: utf8decode(req.query.playerName), lastLogin: timestampForLastLogin
                     });
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(timestampForLastLogin)) + ' added/updated for lastLogin endpoint!'))
-                    console.log({ playerName: utf8.decode(req.query.playerName), lastLogin: timestampForLastLogin });
+                    console.log({ playerName: utf8decode(req.query.playerName), lastLogin: timestampForLastLogin });
                 }
                 if (fields) console.log(fields);
             });
@@ -147,14 +147,14 @@ router.post('/kills', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${utf8.decode(req.query.playerName).replace("'", "''")}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
-                        playerName: utf8.decode(req.query.playerName), kills: req.query.kills
+                        playerName: utf8decode(req.query.playerName), kills: req.query.kills
                     });
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(req.query.kills)) + ' added/updated for kills endpoint!'))
-                    console.log({ playerName: utf8.decode(req.query.playerName), kills: req.query.kills })
+                    console.log({ playerName: utf8decode(req.query.playerName), kills: req.query.kills })
                 }
                 if (fields) console.log(fields);
             });
@@ -179,14 +179,14 @@ router.post('/pointsSpent', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${utf8.decode(req.query.playerName).replace("'", "''")}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
-                        playerName: utf8.decode(req.query.playerName), pointsSpent: req.query.pointsSpent
+                        playerName: utf8decode(req.query.playerName), pointsSpent: req.query.pointsSpent
                     });
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(req.query.pointsSpent)) + ' added/updated for pointSpent endpoint!'))
-                    console.log({ playerName: utf8.decode(req.query.playerName), pointsSpent: req.query.pointsSpent })
+                    console.log({ playerName: utf8decode(req.query.playerName), pointsSpent: req.query.pointsSpent })
                 }
                 if (fields) console.log(fields);
             });
@@ -304,7 +304,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                 while (z--) {
                                     const playerHasLeft = _.findIndex(newPlayers, { name: oldPlayers[z].name }) === -1 ? true : false;
                                     if (playerHasLeft) {
-                                        console.log(utf8.decode(oldPlayers[z].name) + " has left the server")
+                                        console.log(utf8decode(oldPlayers[z].name) + " has left the server")
                                         const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?playerName=${oldPlayers[z].name}`)
                                         postRequests.push(endpointRequest)
                                         // remove from array
@@ -322,7 +322,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                 while (y--) {
                                     const playerHasJoined = _.findIndex(oldPlayers, { name: newPlayers[y].name }) === -1 ? true : false;
                                     if (playerHasJoined) {
-                                        console.log(utf8.decode(newPlayers[y].name), " has joined the server")
+                                        console.log(utf8decode(newPlayers[y].name), " has joined the server")
                                         const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[y].name}`)
                                         postRequests.push(endpointRequest)
                                         // remove from array
@@ -348,7 +348,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                             scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
                                             logger.log({
                                                 level: 'info',
-                                                message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
+                                                message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                                             });
                                             const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
                                             postRequests.push(endpointRequest);
@@ -357,7 +357,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                             scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
                                             logger.log({
                                                 level: 'info',
-                                                message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
+                                                message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                                             });
                                             const endpointRequest = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
                                             postRequests.push(endpointRequest)
@@ -366,7 +366,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                     else {
                                         logger.log({
                                             level: 'info',
-                                            message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score}`,
+                                            message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score}`,
                                         });
                                         const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
                                         postRequests.push(endpointRequest)
@@ -384,7 +384,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             }
                         }
                         catch (error) {
-                            console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8.decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
+                            console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
                             repeatedRequests();
                         }
                         oldPlayers = [];
