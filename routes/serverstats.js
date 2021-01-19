@@ -31,14 +31,15 @@ const dbName = process.env.DBNAME || (() => { new Error("Provide a db username i
 const timer = ms => new Promise(res => setTimeout(res, ms))
 const keyword = keyword => chalk.keyword('blue')(keyword)
 
+const dir = './logging/'
+
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     defaultMeta: { service: 'user-service' },
     transports: [
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'logging.log', level: 'log' }),
-        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.File({ filename: `${dir}logging.log`, level: 'info', maxsize: 7000 }),
+        new winston.transports.File({ filename: `${dir}error.log`, level: 'error' }),
     ],
 });
 
@@ -46,7 +47,10 @@ const logger = winston.createLogger({
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
-    logger.log('Request received at: ', timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null)
+    logger.log({
+        level: 'info',
+        message: `Request received at: ${timestampForRequest} + ' from IP address: ' + ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || null}`,
+    });
     next()
 })
 // define the home page route
@@ -342,19 +346,28 @@ router.get('/repeatedRequests', async (req, res) => {
                                     if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
                                         if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
-                                            logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                            logger.log({
+                                                level: 'info',
+                                                message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
+                                            });
                                             const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
                                             postRequests.push(endpointRequest);
                                         }
                                         else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
-                                            logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                            logger.log({
+                                                level: 'info',
+                                                message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
+                                            });
                                             const endpointRequest = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
                                             postRequests.push(endpointRequest)
                                         }
                                     }
                                     else {
-                                        logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
+                                        logger.log({
+                                            level: 'info',
+                                            message: `${utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score}`,
+                                        });
                                         const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
                                         postRequests.push(endpointRequest)
                                     }

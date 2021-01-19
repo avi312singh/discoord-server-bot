@@ -19,22 +19,26 @@ const dbName = process.env.DBNAME || (() => { new Error("Provide a db username i
 
 const keyword = keyword => chalk.keyword('blue')(keyword)
 
+const dir = './logging/'
+
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     defaultMeta: { service: 'user-service' },
     transports: [
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'logging.log', level: 'log' }),
-        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.File({ filename: `${dir}logging.log`, level: 'info', maxsize: 7000 }),
+        new winston.transports.File({ filename: `${dir}error.log`, level: 'error' }),
     ],
 });
-
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
-    logger.log('Request received at: ', timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null)
+    utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score
+    logger.log({
+        level: 'info',
+        message: `'Request received at: ', ${timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null}`,
+    });
     next()
 })
 // define the home page route
