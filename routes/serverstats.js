@@ -390,7 +390,7 @@ router.get('/repeatedRequests', async (req, res) => {
                         oldPlayers = [];
                         newPlayers = [];
                         const completedNow = moment().format('HH:mm:ss')
-                        console.log(chalk.blue('Completed this second at Time: ', chalk.blueBright(completedNow)));
+                        console.log(chalk.blue('Completed this iteration at Time: ', chalk.blueBright(completedNow)));
                     }
                     else {
                         console.log(chalk.magentaBright("Server not online!"))
