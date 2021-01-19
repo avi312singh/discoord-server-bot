@@ -34,7 +34,6 @@ const logger = winston.createLogger({
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
-    utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score
     logger.log({
         level: 'info',
         message: `'Request received at: ', ${timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null}`,
