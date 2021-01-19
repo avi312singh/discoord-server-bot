@@ -7,6 +7,7 @@ const chalk = require('chalk');
 const utf8 = require('utf8');
 const cron = require('node-cron');
 const moment = require('moment');
+const winston = require('winston');
 const _ = require('underscore');
 
 let directQueryInfo = {};
@@ -30,11 +31,22 @@ const dbName = process.env.DBNAME || (() => { new Error("Provide a db username i
 const timer = ms => new Promise(res => setTimeout(res, ms))
 const keyword = keyword => chalk.keyword('blue')(keyword)
 
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'logging.log', level: 'log' }),
+        new winston.transports.File({ filename: 'combined.log' }),
+    ],
+});
+
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
-    console.log('Request received at: ', timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null)
+    logger.log('Request received at: ', timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null)
     next()
 })
 // define the home page route
@@ -79,7 +91,7 @@ router.post('/', async (req, res) => {
             });
             connection.end((err) => {
                 if (err)
-                    console.log("Error when closing connection", err)
+                    console.error("Error when closing connection", err)
             });
         });
     } else {
@@ -112,7 +124,7 @@ router.post('/lastLogin', async (req, res) => {
             });
             connection.end((err) => {
                 if (err)
-                    console.log("Error when closing connection", err)
+                    console.error("Error when closing connection", err)
             });
         });
     } else {
@@ -144,7 +156,7 @@ router.post('/kills', async (req, res) => {
             });
             connection.end((err) => {
                 if (err)
-                    console.log("Error when closing connection", err)
+                    console.error("Error when closing connection", err)
             });
         });
     } else {
@@ -176,7 +188,7 @@ router.post('/pointsSpent', async (req, res) => {
             });
             connection.end((err) => {
                 if (err)
-                    console.log("Error when closing connection", err)
+                    console.error("Error when closing connection", err)
             });
         });
     } else {
@@ -208,7 +220,7 @@ router.post('/serverInfo', async (req, res) => {
             });
             connection.end((err) => {
                 if (err)
-                    console.log("Error when closing connection", err)
+                    console.error("Error when closing connection", err)
             });
         });
     } else {
@@ -330,19 +342,19 @@ router.get('/repeatedRequests', async (req, res) => {
                                     if (newPlayers[newPlayerIndex].score != oldPlayers[oldPlayerIndex].score) {
                                         if (newPlayers[newPlayerIndex].score < oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = oldPlayers[oldPlayerIndex].score - newPlayers[newPlayerIndex].score
-                                            console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                            logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
                                             const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?playerName=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
                                             postRequests.push(endpointRequest);
                                         }
                                         else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
                                             scoreDifference = newPlayers[newPlayerIndex].score - oldPlayers[oldPlayerIndex].score
-                                            console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
+                                            logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference)
                                             const endpointRequest = axios.post(`${endpoint}serverstats/kills?playerName=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
                                             postRequests.push(endpointRequest)
                                         }
                                     }
                                     else {
-                                        console.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
+                                        logger.log(utf8.decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score)
                                         const endpointRequest = axios.post(`${endpoint}serverstats/?playerName=${newPlayers[newPlayerIndex].name}`)
                                         postRequests.push(endpointRequest)
                                     }
@@ -350,6 +362,7 @@ router.get('/repeatedRequests', async (req, res) => {
 
                                 // Send all endpoint requests from above
                                 Promise.all(postRequests)
+                                    .then(console.log(chalk.whiteBright("Sent remaining players to database")))
                                     .catch(console.error)
 
                             }

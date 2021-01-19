@@ -5,7 +5,9 @@ bot.commands = new Discord.Collection();
 const botCommands = require('./commands');
 const express = require('express');
 const app = express();
+const cors = require('cors')
 const serverStats = require('./routes/serverstats')
+const aggregatedStats = require('./routes/aggregatedstats')
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
@@ -14,12 +16,15 @@ Object.keys(botCommands).map(key => {
 const TOKEN = process.env.TOKEN;
 app.set('port', (process.env.PORT || 5000));
 
+// TODO: REMOVE THIS AFTER TEMP TESTING
+app.use(cors())
 app.use('/serverStats', serverStats)
+app.use('/aggregatedStats', aggregatedStats)
 
 //For avoiding Heroku $PORT error
 app.get('/', function (request, response) {
-  var result = 'App is running'
-  response.send(result);
+  const result = 'App is running'
+  response.status(200).json({ status: result });
 }).listen(app.get('port'), function () {
   console.log('App is running, server is listening on port ', app.get('port'));
 });
@@ -32,7 +37,6 @@ bot.on('ready', () => {
 
 bot.on('message', msg => {
   if (!msg.content.startsWith("!")) return;
-
   const args = msg.content.split(/ +/);
   const command = args.shift().toLowerCase();
   console.info(`Called command: ${command}`);
