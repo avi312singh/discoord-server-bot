@@ -3,12 +3,26 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 const botCommands = require('./commands');
+const express = require('express');
+const app = express();
+const serverStats = require('./routes/serverstats')
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
 });
 
 const TOKEN = process.env.TOKEN;
+app.set('port', (process.env.PORT || 5000));
+
+app.use('/serverStats', serverStats)
+
+//For avoiding Heroku $PORT error
+app.get('/', function (request, response) {
+  var result = 'App is running'
+  response.send(result);
+}).listen(app.get('port'), function () {
+  console.log('App is running, server is listening on port ', app.get('port'));
+});
 
 bot.login(TOKEN);
 
@@ -17,6 +31,8 @@ bot.on('ready', () => {
 });
 
 bot.on('message', msg => {
+  if (!msg.content.startsWith("!")) return;
+
   const args = msg.content.split(/ +/);
   const command = args.shift().toLowerCase();
   console.info(`Called command: ${command}`);

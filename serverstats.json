@@ -1,0 +1,58 @@
+[
+    {
+        "directQueryInfo": {
+            "protocol": 17,
+            "name": "*** Fall To Your Death 24/7 V2.3 64 Players ***",
+            "map": "aocffa-ftyd_4_s",
+            "folder": "chivalrymedievalwarfare",
+            "game": "Chivalry: Medieval Warfare",
+            "appid": 0,
+            "playersnum": 5,
+            "maxplayers": 64,
+            "botsnum": 0,
+            "servertype": "d",
+            "environment": "w",
+            "visibility": 0,
+            "vac": 1,
+            "version": "1.0.0.1",
+            "port": 7777,
+            "steamID": -538592249,
+            "keywords": "\u0003\u0004\u0001O­IÏ\u0001\u0002\u0001\u0001\u0001\u0001\u0002ee\u0001\u0001\u0001\u0003\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001Cmbdl!Lojhiu!w2/4\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001",
+            "gameID": 1236094721
+        }
+    },
+    {
+        "directPlayerInfo": [
+            {
+                "index": 0,
+                "name": "martin",
+                "score": 0,
+                "duration": 5923.65673828125
+            },
+            {
+                "index": 0,
+                "name": "| avi312singh All Lives Matter",
+                "score": 0,
+                "duration": 5545.5537109375
+            },
+            {
+                "index": 0,
+                "name": "ISmokeWeed",
+                "score": 0,
+                "duration": 4008.772216796875
+            },
+            {
+                "index": 0,
+                "name": "76561198072164382",
+                "score": 0,
+                "duration": 591.0857543945312
+            },
+            {
+                "index": 0,
+                "name": "Gaylord",
+                "score": 0,
+                "duration": 23.715471267700195
+            }
+        ]
+    }
+]
