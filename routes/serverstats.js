@@ -455,24 +455,23 @@ router.get('/repeatedRequests', async (req, res) => {
             catch (error) {
                 console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
                 console.trace()
-                await timer(5000);
-                return repeatedRequests();
+                return res.status(404).json({
+                    error: {
+                        message: "Something went wrong: " + timestamp,
+                        error
+                    }
+                });
             }
         }
         return repeatedRequests();
     }
     else {
-        try {
             console.log("Already running, restart endpoint/dyno in heroku and call repeatedRequests again")
-            res.status(404).json({
+            return res.status(404).json({
                 error: {
                     message: "This endpoint has already been called and was called at: " + timestamp
                 }
             });
-        }
-        catch (err) {
-            console.error(err)
-        }
     }
 })
 
