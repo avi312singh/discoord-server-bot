@@ -55,7 +55,7 @@ router.use(function timeLog(req, res, next) {
     });
     next()
 })
-// define the home page route
+
 router.get('/', async (req, res) => {
     directQueryInfo =
         await query
@@ -84,7 +84,7 @@ router.post('/', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -117,7 +117,7 @@ router.post('/lastLogin', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -149,7 +149,8 @@ router.post('/kills', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalKills) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.kills}, ${req.query.kills})
+                            ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}, totalKillsDaily = totalKillsDaily + ${req.query.kills}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -181,7 +182,8 @@ router.post('/pointsSpent', async (req, res) => {
         });
         connection.connect((err) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.pointsSpent}, ${req.query.pointsSpent})
+                                ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${req.query.pointsSpent}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -235,6 +237,30 @@ router.post('/serverInfo', async (req, res) => {
     }
 })
 
+router.get('/resetDaily', async (req, res) => {
+    const connection = mysql.createConnection({
+        host: dbHost,
+        user: dbUsername,
+        password: dbPassword,
+        database: dbName
+    });
+
+    connection.connect((err) => {
+        if (err) console.log(err);
+        connection.query(`UPDATE playerInfo SET totalKillsDaily = 0, totalPointsSpentDaily = 0, totalTimeDaily = 0 WHERE playerName IS NOT NULL`), (err, result, fields) => {
+            if (err) console.log(err);
+        };
+        connection.end((err) => {
+            res.status(200).json({
+                message: "Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to 0"
+            });
+            console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0'))))
+            if (err)
+                console.error("Error when closing connection", err)
+        });
+    });
+})
+
 router.get('/repeatedRequests', async (req, res) => {
     if (!running) {
         running = true;
@@ -247,6 +273,7 @@ router.get('/repeatedRequests', async (req, res) => {
             message: "Initiating repeated requests ", timestamp
         })
 
+        // sends player count every 5 mins to serverInfo table
         cron.schedule('*/5 * * * *', async () => {
             const serverInfo = await getNewPlayers()
                 .then(eachObject => (
@@ -257,16 +284,16 @@ router.get('/repeatedRequests', async (req, res) => {
             await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`)
         });
 
-        // cron.schedule('0 5 * * *', async () => {
-        //     const serverInfo = await getNewPlayers();
-        //         .then(response => response.data)
-        //         .then(eachObject => (
-        //             eachObject
-        //                 .map(element => element.directQueryInfo)
-        //                 .filter(el => el != null)))
+        // sends query to set all daily columns to 0 at 00:01 everyday
+        cron.schedule('01 00 * * *', async () => {
+            const serverInfo = await getNewPlayers()
+                .then(eachObject => (
+                    eachObject
+                        .map(element => element.directQueryInfo)
+                        .filter(el => el != null)))
 
-        //     await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`)
-        // });
+            await axios.get(`${endpoint}serverstats/resetDaily`)
+        });
 
         async function repeatedRequests() {
             try {
@@ -290,7 +317,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             : undefined
 
                         if (!newPlayers) {
-                            console.error(chalk.red("************* Error has occured whilst fetching first set of new players so waiting for 15 seconds before next request to server"))
+                            console.error(chalk.red("************* Error has occurred whilst fetching first set of new players so waiting for 15 seconds before next request to server"))
                             await timer(15000);
                             return repeatedRequests()
                         }
@@ -310,7 +337,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             : undefined
 
                         if (!newPlayers) {
-                            console.error(chalk.red("************* Error has occured whilst fetching second set of so waiting for 15 seconds before next request to server"))
+                            console.error(chalk.red("************* Error has occurred whilst fetching second set of so waiting for 15 seconds before next request to server"))
                             await timer(15000);
                             return repeatedRequests()
                         }
