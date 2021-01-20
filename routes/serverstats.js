@@ -30,6 +30,8 @@ const dbName = process.env.DBNAME || (() => { new Error("Provide a db username i
 const timer = ms => new Promise(res => setTimeout(res, ms))
 const keyword = keyword => chalk.keyword('blue')(keyword)
 const utf8decode = stringTOBeDecoded => utf8.decode(stringTOBeDecoded)
+const getNewPlayers = async () => await axios.get(`${endpoint}serverstats`)
+    .then(response => response.data)
 
 const dir = './logging/'
 
@@ -246,8 +248,7 @@ router.get('/repeatedRequests', async (req, res) => {
         })
 
         cron.schedule('*/5 * * * *', async () => {
-            const serverInfo = await axios.get(`${endpoint}serverstats`)
-                .then(response => response.data)
+            const serverInfo = await getNewPlayers()
                 .then(eachObject => (
                     eachObject
                         .map(element => element.directQueryInfo)
@@ -256,39 +257,63 @@ router.get('/repeatedRequests', async (req, res) => {
             await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`)
         });
 
+        // cron.schedule('0 5 * * *', async () => {
+        //     const serverInfo = await getNewPlayers();
+        //         .then(response => response.data)
+        //         .then(eachObject => (
+        //             eachObject
+        //                 .map(element => element.directQueryInfo)
+        //                 .filter(el => el != null)))
+
+        //     await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`)
+        // });
+
         async function repeatedRequests() {
             try {
-                const serverInfo = await axios.get(`${endpoint}serverstats`)
-                    .then(response => response.data)
-                    .then(eachObject => (
-                        eachObject
-                            .map(element => element.directQueryInfo)
-                            .filter(el => el != null)))
+                const serverInfoUnfiltered = await getNewPlayers();
+
+                const serverInfo = serverInfoUnfiltered
+                    .map(element => element.directQueryInfo)
+                    .filter(el => el != null)
+
                 while (true) {
                     if (serverInfo[0].name) {
                         console.log(chalk.hex('#DEADED').bold('running a new task ************************************************************************************************************************************************************'));
-                        await axios.get(`${endpoint}serverstats`)
-                            .then(response => response.data)
-                            .then(eachObject => (
-                                eachObject
-                                    .map(element => element.directPlayerInfo)
-                                    .filter(el => el != null)))
-                            .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
-                            .catch(console.error)
+                        const serverInfoToBeComparedUnfiltered = await getNewPlayers();
+
+                        const serverInfoToBeCompared = serverInfoToBeComparedUnfiltered
+                            .map(element => element.directPlayerInfo)
+                            .filter(el => el != null)
+
+
+                        newPlayers = serverInfoToBeCompared[0] !== null && serverInfoToBeCompared[0] instanceof (Array) ? serverInfoToBeCompared[0].map(element => element)
+                            : undefined
+
+                        if (!newPlayers) {
+                            console.error(chalk.red("************* Error has occured whilst fetching first set of new players so waiting for 15 seconds before next request to server"))
+                            await timer(15000);
+                            return repeatedRequests()
+                        }
+
                         oldPlayers = newPlayers;
                         newPlayers = [];
 
                         console.log(chalk.hex('#DEADED').bold('*** pausing for 15 seconds ***'));
                         await timer(15000);
 
-                        await axios.get(`${endpoint}serverstats`)
-                            .then(response => response.data)
-                            .then(eachObject => (
-                                eachObject
-                                    .map(element => element.directPlayerInfo)
-                                    .filter(el => el != null)))
-                            .then(filteredResult => newPlayers = filteredResult[0] !== null && filteredResult[0] instanceof (Array) ? filteredResult[0].map(element => element) : console.error("******************** ERROR HAS OCCURRED: FILTERED RESULT IS ", filteredResult))
-                            .catch(console.error)
+                        const serverInfoToBeComparedAgainstOldUnfiltered = await getNewPlayers();
+                        const serverInfoToBeComparedAgainstOld = serverInfoToBeComparedAgainstOldUnfiltered
+                            .map(element => element.directPlayerInfo)
+                            .filter(el => el != null)
+
+                        newPlayers = serverInfoToBeComparedAgainstOld[0] !== null && serverInfoToBeComparedAgainstOld[0] instanceof (Array) ? serverInfoToBeComparedAgainstOld[0].map(element => element)
+                            : undefined
+
+                        if (!newPlayers) {
+                            console.error(chalk.red("************* Error has occured whilst fetching second set of so waiting for 15 seconds before next request to server"))
+                            await timer(15000);
+                            return repeatedRequests()
+                        }
 
                         try {
 
@@ -304,7 +329,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                 while (z--) {
                                     const playerHasLeft = _.findIndex(newPlayers, { name: oldPlayers[z].name }) === -1 ? true : false;
                                     if (playerHasLeft) {
-                                        console.log(utf8decode(oldPlayers[z].name) + " has left the server")
+                                        console.log(utf8decode(oldPlayers[z].name) + " has abandoned the battle")
                                         const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?playerName=${oldPlayers[z].name}`)
                                         postRequests.push(endpointRequest)
                                         // remove from array
@@ -335,7 +360,11 @@ router.get('/repeatedRequests', async (req, res) => {
                                 }
                             }
 
-                            if (!Array.isArray(newPlayers) || !newPlayers.length == 0 || serverInfo[0].playersnum >= 0) {
+                            if (newPlayers.length == 0 || serverInfo[0].playersnum == 0) {
+                                console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
+                                return repeatedRequests();
+                            }
+                            else {
                                 for (i = 0; i < newPlayers.length; i++) {
 
                                     let scoreDifference = 0;
@@ -377,15 +406,12 @@ router.get('/repeatedRequests', async (req, res) => {
                                 Promise.all(postRequests)
                                     .then(console.log(chalk.whiteBright("Sent remaining players to database")))
                                     .catch(console.error)
-
-                            }
-                            else {
-                                console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(newPlayers, null, 4))
                             }
                         }
                         catch (error) {
                             console.error(chalk.red("Error processing this player: ", newPlayers[newPlayerIndex].name ? keyword(utf8decode(newPlayers[newPlayerIndex].name)) : " Error while getting player: " + " " + error))
-                            repeatedRequests();
+                            return repeatedRequests();
+                            // continue
                         }
                         oldPlayers = [];
                         newPlayers = [];
@@ -393,17 +419,20 @@ router.get('/repeatedRequests', async (req, res) => {
                         console.log(chalk.blue('Completed this iteration at Time: ', chalk.blueBright(completedNow)));
                     }
                     else {
-                        console.log(chalk.magentaBright("Server not online!"))
+                        console.log(chalk.magentaBright("Server not online! Waiting for 1 minute"))
+                        await timer(60000);
+                        return repeatedRequests();
                     }
                 }
             }
             catch (error) {
                 console.error(chalk.red("Error has occurred while executing repeated requests: ", error))
                 console.trace()
-                repeatedRequests();
+                await timer(5000);
+                return repeatedRequests();
             }
         }
-        repeatedRequests();
+        return repeatedRequests();
     }
     else {
         try {
