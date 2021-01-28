@@ -216,7 +216,7 @@ router.get('/allRows', async (req, res) => {
             if (err) { console.err(err.stack) }
             console.log('connected as id ' + connection.threadId);
         });
-        connection.query(`SELECT * FROM ${req.query.tableName}`), (err, rows, fields) => {
+        connection.query(`SELECT * FROM ${req.query.tableName}`, (err, rows, fields) => {
             console.log("HIT", rows)
             if (err) console.log(err);
             res.status(200).json({
@@ -224,7 +224,7 @@ router.get('/allRows', async (req, res) => {
                 result: rows
             });
             console.log("result")
-        };
+        });
     }
     else {
         res.status(400).json({
