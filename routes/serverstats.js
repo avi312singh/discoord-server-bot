@@ -46,7 +46,8 @@ const logger = winston.createLogger({
     ],
 });
 
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
+    connectionLimit: 20,
     host: dbHost,
     user: dbUsername,
     password: dbPassword,
@@ -83,7 +84,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     if (req.query.playerName) {
-        connection.connect((err) => {
+        pool.getConnection((err, connection) => {
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
@@ -95,10 +96,8 @@ router.post('/', async (req, res) => {
                     console.log({ playerName: utf8decode(req.query.playerName) })
                 }
                 if (fields) console.log(fields);
-            });
-            connection.end((err) => {
-                if (err)
-                    console.error("Error when closing connection", err)
+                connection.release();
+                if (error) throw error;
             });
         });
     } else {
@@ -110,7 +109,7 @@ router.post('/', async (req, res) => {
 router.post('/lastLogin', async (req, res) => {
     const timestampForLastLogin = moment().format('YYYY-MM-DD HH:mm:ss').toString();
     if (req.query.playerName) {
-        connection.connect((err) => {
+        pool.getConnection((err, connection) => {
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
                 if (err) console.log(err);
@@ -122,10 +121,8 @@ router.post('/lastLogin', async (req, res) => {
                     console.log({ playerName: utf8decode(req.query.playerName), lastLogin: timestampForLastLogin });
                 }
                 if (fields) console.log(fields);
-            });
-            connection.end((err) => {
-                if (err)
-                    console.error("Error when closing connection", err)
+                connection.release();
+                if (err) throw err;
             });
         });
     } else {
@@ -136,7 +133,7 @@ router.post('/lastLogin', async (req, res) => {
 
 router.post('/kills', async (req, res) => {
     if (req.query.playerName && req.query.kills) {
-        connection.connect((err) => {
+        pool.getConnection((err, connection) => {
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.kills}, ${req.query.kills})
                             ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}, totalKillsDaily = totalKillsDaily + ${req.query.kills}`, (err, result, fields) => {
@@ -150,10 +147,8 @@ router.post('/kills', async (req, res) => {
                 }
                 if (fields) console.log(fields);
             });
-            connection.end((err) => {
-                if (err)
-                    console.error("Error when closing connection", err)
-            });
+            connection.release();
+            if (err) throw err;
         });
     } else {
         res.send('Please provide playerName and kills in request')
@@ -163,7 +158,7 @@ router.post('/kills', async (req, res) => {
 
 router.post('/pointsSpent', async (req, res) => {
     if (req.query.playerName && req.query.pointsSpent) {
-        connection.connect((err) => {
+        pool.getConnection((err, connection) => {
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.pointsSpent}, ${req.query.pointsSpent})
                                 ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${req.query.pointsSpent}`, (err, result, fields) => {
@@ -177,10 +172,8 @@ router.post('/pointsSpent', async (req, res) => {
                 }
                 if (fields) console.log(fields);
             });
-            connection.end((err) => {
-                if (err)
-                    console.error("Error when closing connection", err)
-            });
+            connection.release();
+            if (err) throw err;
         });
     } else {
         res.send('Please provide playerName and pointsSpent in request')
@@ -190,17 +183,22 @@ router.post('/pointsSpent', async (req, res) => {
 
 router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
-        connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES ('${req.query.playerCount}', '${req.query.botCount}', '${req.query.serverName}', '${req.query.mapName}')`, (err, result, fields) => {
-            if (err) console.log(err);
-            if (result) {
-                res.status(201).json({
-                    playerCount: req.query.playerCount, botCount: req.query.botCount, serverName: req.query.serverName, mapName: req.query.mapName
-                });
-                console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword('serverInfo') + ' added/updated for serverInfo endpoint!')))
-                console.log({ playerCount: req.query.playerCount, botCount: req.query.botCount, serverName: req.query.serverName, mapName: req.query.mapName })
-            }
-            if (fields) console.log(fields);
-        });
+        pool.getConnection((err, connection) => {
+            if(err) console.error(err)
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES ('${req.query.playerCount}', '${req.query.botCount}', '${req.query.serverName}', '${req.query.mapName}')`, (err, result, fields) => {
+                if (err) console.log(err);
+                if (result) {
+                    res.status(201).json({
+                        playerCount: req.query.playerCount, botCount: req.query.botCount, serverName: req.query.serverName, mapName: req.query.mapName
+                    });
+                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword('serverInfo') + ' added/updated for serverInfo endpoint!')))
+                    console.log({ playerCount: req.query.playerCount, botCount: req.query.botCount, serverName: req.query.serverName, mapName: req.query.mapName })
+                }
+                if (fields) console.log(fields);
+                connection.release();
+                if (err) throw err;
+            });
+        })
     } else {
         res.send('Please provide playerCount, botCount, serverName and mapName in request')
         console.log('Missing a parameter');
@@ -212,21 +210,23 @@ router.get('/allRows', async (req, res) => {
     // also another guard for table name inside an array is needed
     if (req.query.tableName) {
         console.log("HIT")
-        connection.connect(err => {
-            if (err) { console.err(err.stack) }
-            console.log('connected as id ' + connection.threadId);
-        });
-        connection.query(`SELECT * FROM ${req.query.tableName}`, (err, rows, fields) => {
-            console.log("HIT", rows)
-            if (err) console.log(err);
-            res.status(200).json({
-                message: `Successfully got all data from ${req.query.tableName} LIMIT 1`,
-                result: rows
+        pool.getConnection((err, connection) => {
+            if (err) console.error(err)
+            console.log('connected as id ' + pool.threadId);
+            connection.query(`SELECT * FROM ${req.query.tableName} LIMIT 1`, (error, rows, fields) => {
+                console.log("HIT", rows)
+                if (err) console.log(err);
+                res.status(200).json({
+                    message: `Successfully got all data from ${req.query.tableName}`,
+                    result: rows
+                });
+                console.log("result")
             });
-            console.log("result")
+            connection.release();
+            if (err) throw err;
         });
     }
-    else {
+        else {
         res.status(400).json({
             message: `Please provide table name`,
         });
@@ -235,29 +235,36 @@ router.get('/allRows', async (req, res) => {
 });
 
 router.get('/resetDaily', async (req, res) => {
-    connection.query(`UPDATE playerInfo SET totalKillsDaily = 0, totalPointsSpentDaily = 0, totalTimeDaily = 0 WHERE playerName IS NOT NULL`), (err, result, fields) =>
+    pool.getConnection((err, connection) => {
+        if (err) console.error(err)
+    pool.query(`UPDATE playerInfo SET totalKillsDaily = 0, totalPointsSpentDaily = 0, totalTimeDaily = 0 WHERE playerName IS NOT NULL`, (err, result, fields) =>
         res.status(200).json({
             message: "Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to 0"
-        });
+        }));
     console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0'))))
+        connection.release();
+        if (err) throw err;
+    });
 })
 
 router.post('/temporaryData', async (req, res) => {
     if (req.query.playerName && req.query.time && req.query.score && req.query.tableName) {
-        connection.query(`INSERT INTO ${req.query.tableName} (playerName, time, score)
+        pool.getConnection((err, connection) => {
+            connection.query(`INSERT INTO ${req.query.tableName} (playerName, time, score)
             VALUES ('${utf8decode(req.query.playerName).replace("'", "''")}', ${req.query.time}, ${req.query.score})`, (err, result, fields) => {
             if (err) console.log(err);
             if (result) {
                 res.status(201).json({
                     message: `Created player inside ${req.query.tableName}`
                 })
-                console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8decode(req.query.playerName).replace("'", "''"))) + chalk.whiteBright.underline(keyword(req.query.time)) + chalk.whiteBright.underline(keyword(req.query.time)) + chalk.whiteBright.underline(keyword(req.query.score)) + ' added into' + req.query.tableName))
+                console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8decode(req.query.playerName).replace("'", "''"))) + chalk.whiteBright.underline(keyword(req.query.time)) + chalk.whiteBright.underline(keyword(req.query.time)) + chalk.whiteBright.underline(keyword(req.query.score)) + ' added into ' + req.query.tableName))
                 console.log({ playerName: utf8decode(req.query.playerName), time: req.query.time, score: req.query.score })
             }
             if (fields) console.log(fields);
+                connection.release();
+                    if (err) throw err;
+            });
         });
-        if (err)
-            console.error("Error when closing connection", err)
     } else {
         res.status(400).json({
             message: 'Please provide playerName, time, score and tableName in request',
@@ -518,7 +525,7 @@ router.get('/repeatedRequests', async (req, res) => {
             // }
 
             //  Need to truncate temp tables playersComparisonFirst and playersComparisonSecond
-            connection.connect((err) => {
+            pool.getConnection((err, connection) => {
                 if (err) console.log(err);
                 connection.query(`TRUNCATE playersComparisonFirst; TRUNCATE playersComparisonSecond;`, (err, result, fields) => {
                     if (err) console.log(err);
@@ -529,10 +536,8 @@ router.get('/repeatedRequests', async (req, res) => {
                         console.log("Reset all rows in playersComparisonFirst and playersComparisonSecond tables")
                     }
                     if (fields) console.log(fields);
-                });
-                connection.end((err) => {
-                    if (err)
-                        console.error("Error when closing connection", err)
+                    connection.release();
+                    if (err) throw error;
                 });
             });
 
