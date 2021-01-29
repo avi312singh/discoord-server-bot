@@ -226,7 +226,7 @@ router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
         pool.getConnection((err, connection) => {
             if (err) console.error(err)
-            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount}, ${req.query.botCount}, '${req.query.serverName}', '${req.query.mapName}')`, (err, result, fields) => {
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount === undefined ? 0 : req.query.playerCount}, ${req.query.botCount === undefined ? 0 : req.query.botCount}, '${req.query.serverName ? "Not Online" : req.query.serverName}', '${req.query.mapName ? "Not Online" : req.query.serverName}')`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -370,6 +370,8 @@ router.get('/repeatedRequests', async (req, res) => {
 
             if (!serverInfo[0].name) {
                 console.log(chalk.magentaBright("Server not online! Waiting for 1 minute"))
+                firstJob.cancel(true)
+                secondJob.cancel(true)
                 firstJob.cancelNext(true)
                 secondJob.cancelNext(true)
 
