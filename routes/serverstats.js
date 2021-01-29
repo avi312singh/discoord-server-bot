@@ -105,7 +105,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     if (req.query.name) {
         pool.getConnection((err, connection) => {
-            const name = utf8decode(decodeURI(req.query.name));
+            const name = decodeURIComponent(req.query.name);
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(name)}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
@@ -135,7 +135,7 @@ router.post('/lastLogin', async (req, res) => {
     const timestampForLastLogin = moment().format('YYYY-MM-DD HH:mm:ss').toString();
     if (req.query.name) {
         pool.getConnection((err, connection) => {
-            const name = utf8decode(decodeURI(req.query.name));
+            const name = decodeURIComponent(req.query.name);
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(name)}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
                 if (err) console.log(err);
@@ -164,8 +164,8 @@ router.post('/lastLogin', async (req, res) => {
 router.post('/kills', async (req, res) => {
     if (req.query.name && req.query.kills) {
         pool.getConnection((err, connection) => {
-            const name = utf8decode(decodeURI(req.query.name));
-            const kills = decodeURI(req.query.kills);
+            const name = decodeURIComponent(req.query.name);
+            const kills = req.query.kills;
             if (err) console.log(err);
             connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES (${sqlString.escape(name)}, ${kills}, ${kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${kills}, totalKillsDaily = totalKillsDaily + ${kills}`, (err, result, fields) => {
                 if (err) console.log(err);
@@ -195,8 +195,8 @@ router.post('/pointsSpent', async (req, res) => {
     if (req.query.name && req.query.pointsSpent) {
         pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            const name = utf8decode(decodeURI(req.query.name));
-            const pointsSpent = decodeURI(req.query.pointsSpent);
+            const name = decodeURIComponent(req.query.name);
+            const pointsSpent = req.query.pointsSpent;
             connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES (${sqlString.escape(name)}, ${pointsSpent}, ${pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}`,
                 (err, result, fields) => {
                     if (err) console.log(err);
@@ -226,7 +226,7 @@ router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
         pool.getConnection((err, connection) => {
             if (err) console.error(err)
-            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount}, ${req.query.botCount}, ${req.query.serverName}, ${req.query.mapName})`, (err, result, fields) => {
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount}, ${req.query.botCount}, '${req.query.serverName}', '${req.query.mapName}')`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -294,10 +294,10 @@ router.get('/resetDaily', async (req, res) => {
 router.post('/temporaryData', async (req, res) => {
     if (req.query.name && req.query.time && req.query.score && req.query.tableName && recognisedTemporaryTableNames.includes(req.query.tableName)) {
         pool.getConnection((err, connection) => {
-            const tableName = decodeURI(req.query.tableName);
-            const name = utf8decode(decodeURI(req.query.name));
-            const time = decodeURI(req.query.time);
-            const score = decodeURI(req.query.score);
+            const tableName = req.query.tableName;
+            const name = utf8decode(decodeURIComponent(req.query.name));
+            const time = req.query.time;
+            const score = req.query.score;
 
             connection.query(`INSERT INTO ${tableName} (name, time, score)
             VALUES (${sqlString.escape(name)}, ${time}, ${score}) ON DUPLICATE KEY UPDATE name = ${sqlString.escape(name)}, time = ${time}, score = ${score}`, (err, result, fields) => {
@@ -412,7 +412,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     console.error("PlayersInfo at index " + [i] + " has been skipped")
                 }
                 else {
-                    const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonFirst`), {}, axiosBasicAuthConfig)
+                    const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${encodeURIComponent(playersInfo[i].name)}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonFirst`, {}, axiosBasicAuthConfig)
                     playersToBePushedToTemporaryTable.push(endpointRequest)
                 }
             }
@@ -454,7 +454,7 @@ router.get('/repeatedRequests', async (req, res) => {
             }
 
             for (i = 0; i < playersInfo.length; i++) {
-                const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonSecond`), {}, axiosBasicAuthConfig)
+                const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${encodeURIComponent(playersInfo[i].name)}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonSecond`, {}, axiosBasicAuthConfig)
                 playersToBePushedToTemporaryTable.push(endpointRequest)
             }
 
@@ -462,8 +462,8 @@ router.get('/repeatedRequests', async (req, res) => {
 
             // Now that we have sent both players to the database - compare them both
             console.log("********* START COMPARISON ***************")
-            const oldPlayersUnfiltered = await axios.get(encodeURI(`${endpoint}serverstats/allRows?tableName=playersComparisonFirst`), axiosBasicAuthConfig).then(element => element.data.result)
-            const newPlayersUnfiltered = await axios.get(encodeURI(`${endpoint}serverstats/allRows?tableName=playersComparisonSecond`), axiosBasicAuthConfig).then(element => element.data.result)
+            const oldPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
+            const newPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
             const oldPlayers = oldPlayersUnfiltered.filter(el => el.name !== '' || undefined)
@@ -478,7 +478,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     const playerHasLeft = _.findIndex(newPlayers, { name: oldPlayers[z].name }) === -1 ? true : false;
                     if (playerHasLeft) {
                         console.log(oldPlayers[z].name + " has abandoned the battle")
-                        const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/lastLogin?name=${oldPlayers[z].name}`), {}, axiosBasicAuthConfig)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?name=${encodeURIComponent(oldPlayers[z].name)}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                         // remove from array
                         const index = oldPlayers.indexOf(oldPlayers[z].name);
@@ -496,7 +496,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     const playerHasJoined = _.findIndex(oldPlayers, { name: newPlayers[y].name }) === -1 ? true : false;
                     if (playerHasJoined) {
                         console.log(newPlayers[y].name, " has joined the server")
-                        const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/?name=${newPlayers[y].name}`), {}, axiosBasicAuthConfig)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/?name=${encodeURIComponent(newPlayers[y].name)}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                         // remove from array
                         const findIndex = _.findIndex(newPlayers, { name: newPlayers[y].name })
@@ -523,7 +523,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             level: 'info',
                             message: `${newPlayers[newPlayerIndex].name + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                         });
-                        const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/pointsSpent?name=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`), {}, axiosBasicAuthConfig)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?name=${encodeURIComponent(newPlayers[newPlayerIndex].name)}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest);
                     }
                     else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
@@ -532,7 +532,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             level: 'info',
                             message: `${newPlayers[newPlayerIndex].name + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                         });
-                        const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/kills?name=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`), {}, axiosBasicAuthConfig)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/kills?name=${encodeURIComponent(newPlayers[newPlayerIndex].name)}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                     }
                 }
@@ -541,7 +541,7 @@ router.get('/repeatedRequests', async (req, res) => {
                         level: 'info',
                         message: `${newPlayers[newPlayerIndex].name + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score}`,
                     });
-                    const endpointRequest = axios.post(encodeURI(`${endpoint}serverstats/?name=${newPlayers[newPlayerIndex].name}`), {}, axiosBasicAuthConfig)
+                    const endpointRequest = axios.post(`${endpoint}serverstats/?name=${encodeURIComponent(newPlayers[newPlayerIndex].name)}`, {}, axiosBasicAuthConfig)
                     postRequests.push(endpointRequest)
                 }
             }
