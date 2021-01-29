@@ -6,6 +6,7 @@ const mysql = require('mysql');
 const chalk = require('chalk');
 const utf8 = require('utf8');
 const cron = require('node-cron');
+const sqlString = require('sqlstring')
 const schedule = require('node-schedule');
 const moment = require('moment');
 const winston = require('winston');
@@ -27,11 +28,24 @@ const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoi
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
+const basicAuthUsername = process.env.BASICAUTHUSERNAME || (() => { new Error("Provide a server IP in env vars") });
+const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("Provide a server IP in env vars") });
 
-const timer = ms => new Promise(res => setTimeout(res, ms))
+const recognisedTablenames = ['aggregatedInfo', 'playerInfo', 'playersComparisonFirst', 'playersComparisonSecond', 'serverInfo']
+
+const users = {};
+users[basicAuthUsername] = basicAuthPassword;
+
+const axiosBasicAuthConfig = {
+    auth: {
+        username: 'avi312',
+        password: basicAuthPassword
+    }
+}
+
 const keyword = keyword => chalk.keyword('blue')(keyword)
 const utf8decode = stringTOBeDecoded => utf8.decode(stringTOBeDecoded)
-const getNewPlayers = async () => await axios.get(`${endpoint}serverstats`)
+const getNewPlayers = async () => await axios.get(`${endpoint}serverstats`, axiosBasicAuthConfig)
     .then(response => response.data)
 
 const dir = './logging/'
@@ -86,7 +100,7 @@ router.post('/', async (req, res) => {
     if (req.query.name) {
         pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.name).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(utf8decode(req.query.name).replace("'", "''"))}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -111,7 +125,7 @@ router.post('/lastLogin', async (req, res) => {
     if (req.query.name) {
         pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${utf8decode(req.query.name).replace("'", "''")}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(utf8decode(req.query.name).replace("'", "''"))}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = ${timestampForLastLogin}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -135,8 +149,8 @@ router.post('/kills', async (req, res) => {
     if (req.query.name && req.query.kills) {
         pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES ('${utf8decode(req.query.name).replace("'", "''")}', ${req.query.kills}, ${req.query.kills})
-                            ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${req.query.kills}, totalKillsDaily = totalKillsDaily + ${req.query.kills}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES (${sqlString.escape(utf8decode(req.query.name).replace("'", "''"))}, ${sqlString.escape(req.query.kills)}, ${sqlString.escape(req.query.kills)})
+                            ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${sqlString.escape(req.query.kills)}, totalKillsDaily = totalKillsDaily + ${sqlString.escape(req.query.kills)}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -160,8 +174,8 @@ router.post('/pointsSpent', async (req, res) => {
     if (req.query.name && req.query.pointsSpent) {
         pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES ('${utf8decode(req.query.name).replace("'", "''")}', ${req.query.pointsSpent}, ${req.query.pointsSpent})
-                                ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${req.query.pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${req.query.pointsSpent}`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES (${sqlString.escape(utf8decode(req.query).name).replace("'", "''")}, ${sqlString.escape(req.query.pointsSpent)}, ${sqlString.escape(req.query.pointsSpent)})
+                                ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${sqlString.escape(req.query.pointsSpent)}, totalPointsSpentDaily = totalPointsSpentDaily + ${sqlString.escape(req.query.pointsSpent)}`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -184,8 +198,8 @@ router.post('/pointsSpent', async (req, res) => {
 router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
         pool.getConnection((err, connection) => {
-            if(err) console.error(err)
-            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES ('${req.query.playerCount}', '${req.query.botCount}', '${req.query.serverName}', '${req.query.mapName}')`, (err, result, fields) => {
+            if (err) console.error(err)
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${sqlString.escape(req.query.playerCount)}, ${sqlString.escape(req.query.botCount)}, ${sqlString.escape(req.query.serverName)}, ${sqlString.escape(req.query.mapName)})`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -206,11 +220,10 @@ router.post('/serverInfo', async (req, res) => {
 })
 
 router.get('/allRows', async (req, res) => {
-    // also another guard for table name inside an array is needed
-    if (req.query.tableName) {
+    if (req.query.tableName && recognisedTablenames.includes(req.query.tableName)) {
         pool.getConnection((err, connection) => {
             if (err) console.error(err)
-            connection.query(`SELECT * FROM ${req.query.tableName} LIMIT 1`, (error, rows, fields) => {
+            connection.query(`SELECT * FROM ${req.query.tableName}`, (error, rows, fields) => {
                 if (error) console.log(error);
                 res.status(200).json({
                     message: `Successfully got all data from ${req.query.tableName}`,
@@ -221,11 +234,11 @@ router.get('/allRows', async (req, res) => {
             if (err) throw err;
         });
     }
-        else {
+    else {
         res.status(400).json({
-            message: `Please provide table name`,
+            message: `Please provide valid table name`,
         });
-        console.log('Missing table name');
+        console.log('Not valid table name');
     }
 });
 
@@ -233,12 +246,13 @@ router.get('/resetDaily', async (req, res) => {
     pool.getConnection((err, connection) => {
         if (err) console.error(err)
         pool.query(`UPDATE playerInfo SET totalKillsDaily = 0, totalPointsSpentDaily = 0, totalTimeDaily = 0 WHERE playerName IS NOT NULL`,
-        (err, result, fields) => {
-        if (err) console.error(err)
-        res.status(200).json({
-            message: "Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to 0"
-        })});
-    console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0'))))
+            (err, result, fields) => {
+                if (err) console.error(err)
+                res.status(200).json({
+                    message: "Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to 0"
+                })
+            });
+        console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0'))))
         connection.release();
         if (err) throw err;
     });
@@ -247,18 +261,18 @@ router.get('/resetDaily', async (req, res) => {
 router.post('/temporaryData', async (req, res) => {
     if (req.query.name && req.query.time && req.query.score && req.query.tableName) {
         pool.getConnection((err, connection) => {
-            connection.query(`INSERT INTO ${req.query.tableName} (name, time, score)
-            VALUES ('${utf8decode(req.query.name).replace("'", "''")}', ${req.query.time}, ${req.query.score}) ON DUPLICATE KEY UPDATE name = '${utf8decode(req.query.name).replace("'", "''")}', time = ${req.query.time}, score = ${req.query.score}`, (err, result, fields) => {
-            if (err) console.log(err);
-            if (result) {
-                res.status(201).json({
-                    message: `Created temporary player inside ${req.query.tableName}`
-                })
-                console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8decode(req.query.name).replace("'", "''"))) + " " + chalk + chalk.whiteBright.underline(keyword(req.query.time)) + " " + chalk.whiteBright.underline(keyword(req.query.score)) + ' added into ' + req.query.tableName))
-            }
-            if (fields) console.log(fields);
+            connection.query(`INSERT INTO ${sqlString.escape(req.query.tableName)} (name, time, score)
+            VALUES (${sqlString.escape(utf8decode(req.query.name).replace("'", "''"))}, ${sqlString.escape(req.query.time)}, ${sqlString.escape(req.query.score)}) ON DUPLICATE KEY UPDATE name = ${sqlString.escape(utf8decode(req.query.name).replace("'", "''"))}, time = ${sqlString.escape(req.query.time)}, score = ${sqlString.escape(req.query.score)}`, (err, result, fields) => {
+                if (err) console.log(err);
+                if (result) {
+                    res.status(201).json({
+                        message: `Created temporary player inside ${req.query.tableName}`
+                    })
+                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(utf8decode(req.query.name).replace("'", "''"))) + " " + chalk + chalk.whiteBright.underline(keyword(req.query.time)) + " " + chalk.whiteBright.underline(keyword(req.query.score)) + ' added into ' + req.query.tableName))
+                }
+                if (fields) console.log(fields);
                 connection.release();
-                    if (err) throw err;
+                if (err) throw err;
             });
         });
     } else {
@@ -289,7 +303,7 @@ router.get('/repeatedRequests', async (req, res) => {
                         .map(element => element.directQueryInfo)
                         .filter(el => el != null)))
 
-            await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`)
+            await axios.post(`${endpoint}serverstats/serverInfo?playerCount=${serverInfo[0].playersnum}&botCount=${serverInfo[0].botsnum}&serverName=${serverInfo[0].name}&mapName=${serverInfo[0].map}`, {}, axiosBasicAuthConfig)
         });
 
         // sends query to set all daily columns to 0 at 00:01 everyday
@@ -300,9 +314,8 @@ router.get('/repeatedRequests', async (req, res) => {
                         .map(element => element.directQueryInfo)
                         .filter(el => el != null)))
 
-            await axios.get(`${endpoint}serverstats/resetDaily`)
-        });
-
+            await axios.get(`${endpoint}serverstats/resetDaily`, axiosBasicAuthConfig);
+        })
         // NEW IMPLEMENTATION STARTS HERE
 
         // initial request of players every 15 seconds to playersComparisonCache table
@@ -319,9 +332,7 @@ router.get('/repeatedRequests', async (req, res) => {
                 console.log(chalk.magentaBright("Server not online! Waiting for 1 minute"))
                 firstJob.cancelNext(true)
                 secondJob.cancelNext(true)
-                // TODO: test if it works below
-                // firstJob.cancelNext(true)
-                // secondJob.cancelNext(true)
+
             }
 
 
@@ -361,7 +372,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     console.error("PlayersInfo at index " + [i] + " has been skipped")
                 }
                 else {
-                    const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonFirst`)
+                    const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonFirst`, {}, axiosBasicAuthConfig)
                     playersToBePushedToTemporaryTable.push(endpointRequest)
                 }
             }
@@ -403,7 +414,7 @@ router.get('/repeatedRequests', async (req, res) => {
             }
 
             for (i = 0; i < playersInfo.length; i++) {
-                const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonSecond`)
+                const endpointRequest = axios.post(`${endpoint}serverstats/temporaryData?name=${playersInfo[i].name}&score=${playersInfo[i].score}&time=${playersInfo[i].duration}&tableName=playersComparisonSecond`, {}, axiosBasicAuthConfig)
                 playersToBePushedToTemporaryTable.push(endpointRequest)
             }
 
@@ -411,8 +422,8 @@ router.get('/repeatedRequests', async (req, res) => {
 
             // Now that we have sent both players to the database - compare them both
             console.log("********* START COMPARISON ***************")
-            const oldPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonFirst`).then(element => element.data.result)
-            const newPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonSecond`).then(element => element.data.result)
+            const oldPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
+            const newPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
             const oldPlayers = oldPlayersUnfiltered.filter(el => el.name !== '' || undefined)
@@ -427,7 +438,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     const playerHasLeft = _.findIndex(newPlayers, { name: oldPlayers[z].name }) === -1 ? true : false;
                     if (playerHasLeft) {
                         console.log(utf8decode(oldPlayers[z].name) + " has abandoned the battle")
-                        const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?name=${oldPlayers[z].name}`)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/lastLogin?name=${oldPlayers[z].name}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                         // remove from array
                         const index = oldPlayers.indexOf(oldPlayers[z].name);
@@ -445,7 +456,7 @@ router.get('/repeatedRequests', async (req, res) => {
                     const playerHasJoined = _.findIndex(oldPlayers, { name: newPlayers[y].name }) === -1 ? true : false;
                     if (playerHasJoined) {
                         console.log(utf8decode(newPlayers[y].name), " has joined the server")
-                        const endpointRequest = axios.post(`${endpoint}serverstats/?name=${newPlayers[y].name}`)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/?name=${newPlayers[y].name}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                         // remove from array
                         const findIndex = _.findIndex(newPlayers, { name: newPlayers[y].name })
@@ -472,7 +483,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                 level: 'info',
                                 message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score is less than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                             });
-                            const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?name=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`)
+                            const endpointRequest = axios.post(`${endpoint}serverstats/pointsSpent?name=${newPlayers[newPlayerIndex].name}&pointsSpent=${scoreDifference >= 90 ? 0 : scoreDifference}`, {}, axiosBasicAuthConfig)
                             postRequests.push(endpointRequest);
                         }
                         else if (newPlayers[newPlayerIndex].score > oldPlayers[oldPlayerIndex].score) {
@@ -481,7 +492,7 @@ router.get('/repeatedRequests', async (req, res) => {
                                 level: 'info',
                                 message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score is more than the old one as ******** new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score + " with difference " + scoreDifference}`,
                             });
-                            const endpointRequest = axios.post(`${endpoint}serverstats/kills?name=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`)
+                            const endpointRequest = axios.post(`${endpoint}serverstats/kills?name=${newPlayers[newPlayerIndex].name}&kills=${scoreDifference % 2 == 0 ? scoreDifference / 2 : scoreDifference}`, {}, axiosBasicAuthConfig)
                             postRequests.push(endpointRequest)
                         }
                     }
@@ -490,7 +501,7 @@ router.get('/repeatedRequests', async (req, res) => {
                             level: 'info',
                             message: `${utf8decode(newPlayers[newPlayerIndex].name) + "'s score hasn't changed ******** because new score is " + newPlayers[newPlayerIndex].score + " and old score is " + oldPlayers[oldPlayerIndex].score}`,
                         });
-                        const endpointRequest = axios.post(`${endpoint}serverstats/?name=${newPlayers[newPlayerIndex].name}`)
+                        const endpointRequest = axios.post(`${endpoint}serverstats/?name=${newPlayers[newPlayerIndex].name}`, {}, axiosBasicAuthConfig)
                         postRequests.push(endpointRequest)
                     }
                 }
@@ -550,8 +561,8 @@ router.get('/repeatedRequests', async (req, res) => {
         secondJob.cancelNext(true)
 
         // NEW IMPLEMENTATION ENDS HERE
-
     }
+
     else {
         console.log("Already running, restart endpoint/dyno in heroku and call repeatedRequests again")
         return res.status(404).json({

@@ -25,16 +25,16 @@ const TOKEN = process.env.TOKEN
 app.set('port', (process.env.PORT || 5000));
 
 // basic auth credentials - not working on repeatedRequests?
-// app.use(basicAuth(
-//   {
-//     users: {
-//       avi312: 'Happydays123!'
-//     },
-//     unauthorizedResponse: {
-//       message: 'Bad credentials',
-//     },
-//     challenge: true,
-//   }));
+app.use(basicAuth(
+  {
+    users: {
+      avi312: basicAuthPassword
+    },
+    unauthorizedResponse: {
+      message: 'Bad credentials',
+    },
+    challenge: true,
+  }));
 
 // TODO: REMOVE THIS AFTER TEMP TESTING
 app.use(cors())
