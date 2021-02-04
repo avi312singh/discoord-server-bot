@@ -9,8 +9,9 @@ const cron = require('node-cron');
 const sqlString = require('sqlstring')
 const schedule = require('node-schedule');
 const moment = require('moment');
-const winston, { error } = require('winston');
+const winston = require('winston');
 const _ = require('underscore');
+const { error } = require('winston');
 
 let directQueryInfo = {};
 let directPlayerInfo = [];
