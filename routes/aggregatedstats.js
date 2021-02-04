@@ -32,7 +32,7 @@ const logger = winston.createLogger({
 });
 
 const pool = mysql.createPool({
-    connectionLimit: 20,
+    connectionLimit: 150,
     host: dbHost,
     user: dbUsername,
     password: dbPassword,
