@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
         .then(query.close)
         .catch(console.log);
 
-        if(directPlayerInfo || directQueryInfo === {}){
+        if(directQueryInfo === {}){
             throw error;
         }
 
