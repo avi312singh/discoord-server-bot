@@ -24,6 +24,9 @@ users[basicAuthUsername] = basicAuthPassword;
 const TOKEN = process.env.TOKEN
 app.set('port', (process.env.PORT || 5000));
 
+// TODO: REMOVE THIS AFTER TEMP TESTING
+app.use(cors())
+
 // basic auth credentials - not working on repeatedRequests?
 app.use(basicAuth(
   {
@@ -35,9 +38,6 @@ app.use(basicAuth(
     },
     challenge: true,
   }));
-
-// TODO: REMOVE THIS AFTER TEMP TESTING
-app.use(cors())
 
 app.use('/serverStats', serverStats)
 app.use('/aggregatedStats', aggregatedStats)

@@ -9,7 +9,7 @@ const cron = require('node-cron');
 const sqlString = require('sqlstring')
 const schedule = require('node-schedule');
 const moment = require('moment');
-const winston = require('winston');
+const winston, { error } = require('winston');
 const _ = require('underscore');
 
 let directQueryInfo = {};
@@ -33,6 +33,9 @@ const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("P
 
 const recognisedTableNames = ['aggregatedInfo', 'playerInfo', 'playersComparisonFirst', 'playersComparisonSecond', 'serverInfo']
 const recognisedTemporaryTableNames = ['playersComparisonFirst', 'playersComparisonSecond']
+
+const currentMapName = "aocffa-ftyd_41_s_wip"
+const currentServerName = "*** Fall To Your Death 24/7 2.4 64 Players ***"
 
 const users = {};
 users[basicAuthUsername] = basicAuthPassword;
@@ -85,21 +88,46 @@ router.use(function timeLog(req, res, next) {
 })
 
 router.get('/', async (req, res) => {
-    directQueryInfo =
+    try {
+        directQueryInfo =
         await query
-            .info(serverIp, 7778, 2000)
-            .then(query.close)
-            .catch(console.log);
-    directPlayerInfo =
+        .info(serverIp, 7778, 2000)
+        .then(query.close)
+        .catch(console.log);
+        directPlayerInfo =
         await query
-            .players(serverIp, 7778, 2000)
-            .then(query.close)
-            .catch(console.log);
+        .players(serverIp, 7778, 2000)
+        .then(query.close)
+        .catch(console.log);
 
-    allServerInfo.push({ directQueryInfo: directQueryInfo })
-    allServerInfo.push({ directPlayerInfo: directPlayerInfo })
-    res.status(200).json(allServerInfo)
-    allServerInfo = [];
+        if(directPlayerInfo || directQueryInfo === {}){
+            throw error;
+        }
+
+        allServerInfo.push({ directQueryInfo: directQueryInfo })
+        allServerInfo.push({ directPlayerInfo: directPlayerInfo })
+        res.status(200).json(allServerInfo)
+        allServerInfo = [];
+    }
+    catch(error) {
+        console.error(chalk.red("Sending default response as error has occurred whilst fetching a set of new players"))
+
+        allServerInfo.push({
+            directQueryInfo: {
+                "name": currentServerName,
+                "map": currentMapName,
+                "folder": "chivalrymedievalwarfare",
+                "game": "Chivalry: Medieval Warfare",
+                "appid": 0,
+                "playersnum": 0,
+                "maxplayers": 64,
+                "botsnum": 0
+            }
+        })
+        allServerInfo.push({ directPlayerInfo: [] })
+        res.status(200).json(allServerInfo)
+        allServerInfo = [];
+    }
 })
 
 router.post('/', async (req, res) => {
@@ -348,12 +376,6 @@ router.get('/repeatedRequests', async (req, res) => {
 
         // sends query to set all daily columns to 0 at 00:01 everyday
         cron.schedule('01 00 * * *', async () => {
-            const serverInfo = await getNewPlayers()
-                .then(eachObject => (
-                    eachObject
-                        .map(element => element.directQueryInfo)
-                        .filter(el => el != null)))
-
             await axios.get(`${endpoint}serverstats/resetDaily`, axiosBasicAuthConfig);
         })
         // NEW IMPLEMENTATION STARTS HERE
@@ -361,7 +383,6 @@ router.get('/repeatedRequests', async (req, res) => {
         // initial request of players every 15 seconds to playersComparisonCache table
 
         const firstJob = schedule.scheduleJob({ rule: '*/15 * * * * *' }, async (fireDate) => {
-
 
             const serverInfoUnfiltered = await getNewPlayers();
             const serverInfo = serverInfoUnfiltered
@@ -376,7 +397,6 @@ router.get('/repeatedRequests', async (req, res) => {
                 secondJob.cancelNext(true)
 
             }
-
 
             console.log(chalk.hex('#DEADED').bold('running first task ************************************************************************************************************************************************************'));
             console.log('First starting now: ' + moment().format('ss') + " but really started at " + fireDate);
