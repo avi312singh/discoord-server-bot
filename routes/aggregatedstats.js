@@ -59,7 +59,14 @@ router.get('/playerCount', async (req, res) => {
     const duration = req.query.duration ? req.query.duration : 288
 pool.getConnection((err, connection) => {
             if (err) console.log(err);
-            connection.query(`SELECT time, playerCount FROM sys.serverInfo ORDER BY time ASC limit ${duration};`, (err, result, fields) => {
+    connection.query(`SELECT
+    time, playerCount
+    FROM
+        (
+        SELECT time, playerCount FROM sys.serverInfo ORDER BY time DESC limit ${duration}
+        ) a
+    ORDER BY
+    time;`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(200).json({
