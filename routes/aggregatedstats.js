@@ -66,7 +66,7 @@ pool.getConnection((err, connection) => {
                         duration,
                         response: result
                     })
-                    console.log(chalk.blue('Query for ' + chalk.whiteBright.underline(duration) + " records", JSON.stringify(result, null, 4)))
+                    console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(duration) + " records at aggregatedstats/playerCount"))
                 }
             });
     connection.release();

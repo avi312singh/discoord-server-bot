@@ -94,12 +94,12 @@ router.get('/', async (req, res) => {
         await query
         .info(serverIp, 7778, 2000)
         .then(query.close)
-        .catch(console.log);
+        .catch(console.error);
         directPlayerInfo =
         await query
         .players(serverIp, 7778, 2000)
         .then(query.close)
-        .catch(console.log);
+        .catch(console.error);
 
         if(directQueryInfo === {}){
             throw error;
@@ -255,7 +255,7 @@ router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
         pool.getConnection((err, connection) => {
             if (err) console.error(err)
-            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount === undefined ? 0 : req.query.playerCount}, ${req.query.botCount === undefined ? 0 : req.query.botCount}, '${req.query.serverName ? "Not Online" : req.query.serverName}', '${req.query.mapName ? "Not Online" : req.query.serverName}')`, (err, result, fields) => {
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount || 0}, ${req.query.botCount || 0}, '${req.query.serverName || "Not Online"}', '${req.query.mapName || "Not Online"}')`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
@@ -396,7 +396,6 @@ router.get('/repeatedRequests', async (req, res) => {
                 secondJob.cancel(true)
                 firstJob.cancelNext(true)
                 secondJob.cancelNext(true)
-
             }
 
             console.log(chalk.hex('#DEADED').bold('running first task ************************************************************************************************************************************************************'));
