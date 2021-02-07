@@ -58,6 +58,8 @@ const utf8decode = stringTOBeDecoded => {
 const getNewPlayers = async () => await axios.get(`${endpoint}serverstats`, axiosBasicAuthConfig)
     .then(response => response.data)
 
+const undefinedCheck = (objectToCheck, ifUndefined) => objectToCheck == undefined ? ifUndefined : objectToCheck;
+
 const dir = './logging/'
 
 const logger = winston.createLogger({
@@ -255,7 +257,7 @@ router.post('/serverInfo', async (req, res) => {
     if (req.query.playerCount && req.query.botCount && req.query.serverName && req.query.mapName) {
         pool.getConnection((err, connection) => {
             if (err) console.error(err)
-            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${req.query.playerCount || 0}, ${req.query.botCount || 0}, '${req.query.serverName || "Not Online"}', '${req.query.mapName || "Not Online"}')`, (err, result, fields) => {
+            connection.query(`INSERT INTO serverInfo (playerCount, botCount, serverName, mapName) VALUES (${undefinedCheck(req.query.playerCount, 0)}, ${undefinedCheck(req.query.botCount, 0)}, '${undefinedCheck(req.query.serverName, "Not Online")}', '${undefinedCheck(req.query.mapName, "Not Online")}')`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     res.status(201).json({
