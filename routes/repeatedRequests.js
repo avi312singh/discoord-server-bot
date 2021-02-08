@@ -1,33 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const query = require("source-server-query");
 const axios = require('axios');
 const mysql = require('mysql');
 const chalk = require('chalk');
-const utf8 = require('utf8');
 const cron = require('node-cron');
 const schedule = require('node-schedule');
 const moment = require('moment');
 const winston = require('winston');
 const _ = require('underscore');
 
-
-const app = express()
-
-const lastLoginUtil = require('../serverStatsUtils/lastLogin')
-const killsUtil = require('../serverStatsUtils/kills')
-const pointsSpentUtil = require('../serverStatsUtils/pointsSpent')
 const resetDailyUtil = require('../serverStatsUtils/resetDaily')
 const serverInfoUtil = require('../serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../serverStatsUtils/temporaryData')
 
-let directQueryInfo = {};
-let directPlayerInfo = [];
-let allServerInfo = [];
 let running = false;
-let timestamp;      // can be made const
-let timestampForRequest;        // can be made const
+let timestamp;
 let newPlayerIndex;
 let oldPlayerIndex;
 let postRequests = [];
@@ -54,12 +42,6 @@ const axiosBasicAuthConfig = {
 }
 
 const keyword = keyword => chalk.keyword('blue')(keyword)
-const utf8decode = stringTOBeDecoded => {
-    try { return utf8.decode(stringTOBeDecoded) } catch (error) {
-        console.error(chalk.red("Could not decode string " + stringTOBeDecoded
-            + " using ") + stringTOBeDecoded + chalk.red(" instead")); return stringTOBeDecoded
-    }
-}
 
 const getNewPlayers = async () => {
     const currentMapName = "aocffa-ftyd_41_s_wip"
@@ -91,11 +73,9 @@ const pool = mysql.createPool({
 router.get('/', async (req, res) => {
     if (!running) {
         running = true;
-
         timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
 
         console.log("GET: repeatedRequests " + timestamp)
-
         res.status(200).json({
             message: "Initiating repeated requests ", timestamp
         })

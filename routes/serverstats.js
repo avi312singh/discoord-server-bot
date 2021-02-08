@@ -1,40 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const query = require("source-server-query");
-const axios = require('axios');
 const mysql = require('mysql');
 const chalk = require('chalk');
-const utf8 = require('utf8');
-const cron = require('node-cron');
 const sqlString = require('sqlstring')
-const schedule = require('node-schedule');
 const moment = require('moment');
 const winston = require('winston');
 const _ = require('underscore');
-const { error } = require('winston');
-
-const app = express()
 
 const lastLoginUtil = require('../serverStatsUtils/lastLogin')
 const killsUtil = require('../serverStatsUtils/kills')
 const pointsSpentUtil = require('../serverStatsUtils/pointsSpent')
-const resetDailyUtil = require('../serverStatsUtils/resetDaily')
-const serverInfoUtil = require('../serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../serverStatsUtils/temporaryData')
 
-let directQueryInfo = {};
-let directPlayerInfo = [];
-let allServerInfo = [];
-let running = false;
-let timestamp;      // can be made const
-let timestampForRequest;        // can be made const
-let newPlayerIndex;
-let oldPlayerIndex;
-let postRequests = [];
+let timestampForRequest;
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
-const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
@@ -47,25 +28,7 @@ const recognisedTemporaryTableNames = ['playersComparisonFirst', 'playersCompari
 const users = {};
 users[basicAuthUsername] = basicAuthPassword;
 
-const axiosBasicAuthConfig = {
-    auth: {
-        username: 'avi312',
-        password: basicAuthPassword
-    }
-}
-
-const keyword = keyword => chalk.keyword('blue')(keyword)
-const utf8decode = stringTOBeDecoded => {
-    try { return utf8.decode(stringTOBeDecoded) } catch (error) {
-        console.error(chalk.red("Could not decode string " + stringTOBeDecoded
-            + " using ") + stringTOBeDecoded + chalk.red(" instead")); return stringTOBeDecoded
-    }
-}
-const getNewPlayers = async () => await axios.get(`${endpoint}serverstats`, axiosBasicAuthConfig)
-    .then(response => response.data)
-
 const dir = './logging/'
-
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
@@ -75,6 +38,7 @@ const logger = winston.createLogger({
         new winston.transports.File({ filename: `${dir}error.log`, level: 'error' }),
     ],
 });
+const keyword = keyword => chalk.keyword('blue')(keyword)
 
 const pool = mysql.createPool({
     connectionLimit: 150,

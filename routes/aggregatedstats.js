@@ -3,7 +3,6 @@ const router = express.Router();
 const mysql = require('mysql');
 const chalk = require('chalk');
 const moment = require('moment');
-const _ = require('underscore');
 const winston = require('winston');
 
 let timestampForRequest;        // can be made const
