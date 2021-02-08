@@ -103,7 +103,7 @@ router.get('/', async (req, res) => {
         // sends query to set all daily columns to 0 at 00:01 everyday
         cron.schedule('01 00 * * *', async () => {
             resetDailyUtil(pool)
-                .then(console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')))))
+                .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 106 AT' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')))))
         })
 
         // initial request of players every 15 seconds to playersComparisonCache table
@@ -211,8 +211,8 @@ router.get('/', async (req, res) => {
             const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
-            const oldPlayers = oldPlayersUnfiltered.filter(el => el.name !== '' || undefined)
-            const newPlayers = newPlayersUnfiltered.filter(el => el.name !== '' || undefined)
+            const oldPlayers = oldPlayersUnfiltered.rows.filter(el => el.name !== '' || undefined)
+            const newPlayers = newPlayersUnfiltered.rows.filter(el => el.name !== '' || undefined)
 
             // Compare both arrays with each other and see which elements don't exist in other one
 

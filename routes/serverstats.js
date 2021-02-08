@@ -77,7 +77,7 @@ router.use(function timeLog(req, res, next) {
                     res.status(201).json({
                         name: name
                     })
-                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(name)) + ' added/updated for time addition endpoint!'))
+                    console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(name)) + ' added/updated for / POST!'))
                     console.log({ name: name })
                 }
                 if (fields) console.log(fields);
@@ -99,7 +99,7 @@ router.post('/lastLogin', (req, res) => {
     lastLoginUtil(req.query.name, pool)
     .then(result => {
         res.status(201).json(result)
-        console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.lastLogin)) + ' added/updated for lastLogin endpoint!'))
+        console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.lastLogin)) + ' added/updated for /lastLogin POST!'))
         console.log({ name: result.name, lastLogin: result.lastLogin })
     })
     .catch(result => {
@@ -111,7 +111,7 @@ router.post('/kills', async (req, res) => {
     killsUtil(req.query.name, req.query.kills, pool)
     .then(result => {
         res.status(201).json(result)
-        console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.kills)) + ' added/updated for kills endpoint!'))
+        console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.kills)) + ' added/updated for /kills POST!'))
         console.log({ name: result.name, kills: result.kills })
     })
     .catch(result => {
@@ -123,7 +123,7 @@ router.post('/pointsSpent', async (req, res) => {
     pointsSpentUtil(req.query.name, req.query.pointsSpent, pool)
         .then(result => {
             res.status(201).json(result)
-            console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.pointsSpent)) + ' added/updated for pointSpent endpoint!'))
+            console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.pointsSpent)) + ' added/updated for /pointSpent POST!'))
             console.log({ name: result.name, pointsSpent: result.pointsSpent })
         })
         .catch(result => {
@@ -136,7 +136,8 @@ router.post('/temporaryData', async (req, res) => {
     temporaryDataUtil(req.query.name, req.query.time, req.query.score, req.query.tableName, pool, recognisedTemporaryTableNames)
         .then(result => {
             res.status(201).json({ message: `Created temporary player inside ${result.tableName}`})
-            console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.name)) + " with duration " + chalk.whiteBright.underline(keyword(result.time)) + " and score " + chalk.whiteBright.underline(keyword(result.score)) + ' added into ' + result.tableName))
+            console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.name)) + " with duration " + chalk.whiteBright.underline(keyword(result.time)) + " and score " + chalk.whiteBright.underline(keyword(result.score)) +
+                ' added into ' + result.tableName + ' for /temporaryData POST'))
         })
         .catch(result => {
             console.log(chalk.red(result))

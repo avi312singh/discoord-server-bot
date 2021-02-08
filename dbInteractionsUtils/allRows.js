@@ -9,8 +9,7 @@ module.exports = (pool, tableName, recognisedTableNames) => {
                             if (error) console.log(error);
                             connection.release();
                             return err ? reject(err) : resolve({
-                                message: `Successfully got all data from ${tableName}`,
-                                result: rows
+                                rows
                             });
                         });
                         if (err) throw err;
