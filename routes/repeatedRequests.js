@@ -88,12 +88,10 @@ router.get('/', async (req, res) => {
                         .map(element => element.directQueryInfo)
                         .filter(el => el != null)))
 
-            const undefinedCheck = (objectToCheck, ifUndefined) => objectToCheck == undefined ? ifUndefined : objectToCheck;
-
-            serverInfoUtil(serverInfo[0].playersnum, serverInfo[0].botsnum, serverInfo[0].name, serverInfo[0].map, undefinedCheck, pool)
+            serverInfoUtil(serverInfo[0].playersnum, serverInfo[0].botsnum, serverInfo[0].name, serverInfo[0].map, pool)
                 .then(result => {
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword('serverInfo') + ' added/updated for serverInfo endpoint!')))
-                    console.log({ playerCount: result.playerCountToBeStored, botCount: result.botCountToBeStored, serverName: result.serverNameToBeStored, mapName: result.mapNameToBeStored })
+                    console.log({ playerCount: result.playerCount, botCount: result.botCount, serverName: result.serverName, mapName: result.mapName })
                 })
                 .catch(result => {
                     console.log(chalk.red(result))

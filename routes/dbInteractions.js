@@ -50,7 +50,7 @@ router.get('/resetDaily', async (req, res) => {
     resetDailyUtil(pool, chalk, keyword)
         .then(result => {
             res.status(201).json({ message: result })
-            console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')) + ' for /resetDaily POST'))
+            console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')) + ' for /resetDaily GET'))
         })
         .catch(result => {
             console.log(chalk.red(result))
@@ -62,7 +62,7 @@ router.get('/allRows', async (req, res) => {
     allRowsUtil(pool, req.query.tableName, recognisedTableNames)
         .then(result => {
             res.status(201).json({result})
-            console.log(chalk.blue('Successfully got all data from ' + chalk.whiteBright.underline(keyword(req.query.tableName)) + ' for /allRows POST'))
+            console.log(chalk.blue('Successfully got all data from ' + chalk.whiteBright.underline(keyword(req.query.tableName)) + ' for /allRows GET'))
         })
         .catch(result => {
             console.log(chalk.red(result))
