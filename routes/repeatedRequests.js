@@ -9,10 +9,10 @@ const moment = require('moment');
 const winston = require('winston');
 const _ = require('underscore');
 
-const resetDailyUtil = require('../serverStatsUtils/resetDaily')
-const serverInfoUtil = require('../serverStatsUtils/serverInfo')
-const serverStatsUtil = require('../serverStatsUtils/serverStats')
-const temporaryDataUtil = require('../serverStatsUtils/temporaryData')
+const resetDailyUtil = require('../routesUtils/serverStatsUtils/resetDaily')
+const serverInfoUtil = require('../routesUtils/serverStatsUtils/serverInfo')
+const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
+const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
 let running = false;
 let timestamp;

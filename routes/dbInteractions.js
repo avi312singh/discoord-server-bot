@@ -9,8 +9,8 @@ const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db pa
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 
-const allRowsUtil = require('../dbInteractionsUtils/allRows');
-const resetDailyUtil = require('../dbInteractionsUtils/resetDaily');
+const allRowsUtil = require('../routesUtils/dbInteractionsUtils/allRows');
+const resetDailyUtil = require('../routesUtils/dbInteractionsUtils/resetDaily');
 const chalk = require('chalk');
 
 const dir = './logging/'

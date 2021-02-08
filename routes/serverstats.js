@@ -7,11 +7,11 @@ const moment = require('moment');
 const winston = require('winston');
 const _ = require('underscore');
 
-const lastLoginUtil = require('../serverStatsUtils/lastLogin')
-const killsUtil = require('../serverStatsUtils/kills')
-const pointsSpentUtil = require('../serverStatsUtils/pointsSpent')
-const serverStatsUtil = require('../serverStatsUtils/serverStats')
-const temporaryDataUtil = require('../serverStatsUtils/temporaryData')
+const lastLoginUtil = require('../routesUtils/serverStatsUtils/lastLogin')
+const killsUtil = require('../routesUtils/serverStatsUtils/kills')
+const pointsSpentUtil = require('../routesUtils/serverStatsUtils/pointsSpent')
+const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
+const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
 let timestampForRequest;
 
