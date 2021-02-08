@@ -96,7 +96,9 @@ router.use(function timeLog(req, res, next) {
     router.get('/', async (req, res) => {
         const currentMapName = "aocffa-ftyd_41_s_wip"
         const currentServerName = "*** Fall To Your Death 24/7 2.4 64 Players ***"
-        await serverStatsUtil(currentMapName, currentServerName, serverIp).then(response => res.status(200).json({ response }));
+        await serverStatsUtil(currentMapName, currentServerName, serverIp).then(response => {
+            console.log('GET serverstats');
+            res.status(200).json({ response })});
     })
 
     router.post('/', async (req, res) => {
@@ -107,6 +109,7 @@ router.use(function timeLog(req, res, next) {
             connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(name)}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
+                    console.log('POST serverstats');
                     res.status(201).json({
                         name: name
                     })

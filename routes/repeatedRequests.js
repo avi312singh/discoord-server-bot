@@ -61,11 +61,10 @@ const utf8decode = stringTOBeDecoded => {
     }
 }
 
-const getNewPlayers = () => {
+const getNewPlayers = async () => {
     const currentMapName = "aocffa-ftyd_41_s_wip"
     const currentServerName = "*** Fall To Your Death 24/7 2.4 64 Players ***"
-    return await serverStatsUtil(currentMapName, currentServerName, serverIp).then(response => res.status(200).json({ response }))
-                                                                             .catch(error => console.log(chalk.red(error)))
+    return await serverStatsUtil(currentMapName, currentServerName, serverIp).catch(error => console.log(chalk.red(error)))
 };
 
 const dir = './logging/'
@@ -89,7 +88,7 @@ const pool = mysql.createPool({
 });
 
 
-router.get('/repeatedRequests', async (req, res) => {
+router.get('/', async (req, res) => {
     if (!running) {
         running = true;
 
@@ -228,8 +227,8 @@ router.get('/repeatedRequests', async (req, res) => {
 
             // Now that we have sent both players to the database - compare them both
             console.log("********* START COMPARISON ***************")
-            const oldPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
-            const newPlayersUnfiltered = await axios.get(`${endpoint}serverstats/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
+            const oldPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
+            const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
             const oldPlayers = oldPlayersUnfiltered.filter(el => el.name !== '' || undefined)
@@ -355,3 +354,5 @@ router.get('/repeatedRequests', async (req, res) => {
         });
     }
 })
+
+module.exports = router

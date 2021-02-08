@@ -80,3 +80,5 @@ router.get('/allRows', async (req, res) => {
         console.log('Not valid table name');
     }
 });
+
+module.exports = router

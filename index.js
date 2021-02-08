@@ -45,7 +45,7 @@ app.use(basicAuth(
 app.use('/serverStats', serverStats)
 app.use('/aggregatedStats', aggregatedStats)
 app.use('/repeatedRequests', repeatedRequests)
-app.use('/action', dbInteractions)
+app.use('/dbInteractions', dbInteractions)
 
 //For avoiding Heroku $PORT error
 app.get('/', function (request, response) {
