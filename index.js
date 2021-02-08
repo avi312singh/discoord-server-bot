@@ -7,8 +7,11 @@ const express = require('express');
 const app = express();
 const basicAuth = require('express-basic-auth')
 const cors = require('cors')
+
 const serverStats = require('./routes/serverstats')
 const aggregatedStats = require('./routes/aggregatedstats')
+const repeatedRequests = require('./routes/repeatedRequests')
+const dbInteractions = require('./routes/dbInteractions')
 
 Object.keys(botCommands).map(key => {
   bot.commands.set(botCommands[key].name, botCommands[key]);
@@ -41,6 +44,8 @@ app.use(basicAuth(
 
 app.use('/serverStats', serverStats)
 app.use('/aggregatedStats', aggregatedStats)
+app.use('/repeatedRequests', repeatedRequests)
+app.use('/action', dbInteractions)
 
 //For avoiding Heroku $PORT error
 app.get('/', function (request, response) {
