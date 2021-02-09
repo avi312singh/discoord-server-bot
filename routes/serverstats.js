@@ -68,7 +68,7 @@ router.use(function timeLog(req, res, next) {
         pool.getConnection((err, connection) => {
             const name = decodeURIComponent(req.query.name);
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, online) VALUES ('${name}', 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, online) VALUES ('${name}', true) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     console.log('POST serverstats');
