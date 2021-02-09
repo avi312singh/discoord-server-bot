@@ -53,7 +53,7 @@ module.exports = (durationFromRequest, pool) => {
             });
         }
         catch (error) {
-            reject('Error has occured ', error)
+            reject('Error has occurred ', error)
         }
     })
 }

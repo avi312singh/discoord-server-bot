@@ -22,7 +22,7 @@ module.exports = (pool, tableName, recognisedTableNames) => {
                 reject('Please provide tableName in query params')
             }
         } catch (error) {
-            reject('Error has occured ', error)
+            reject('Error has occurred ', error)
         }
     })
 }
