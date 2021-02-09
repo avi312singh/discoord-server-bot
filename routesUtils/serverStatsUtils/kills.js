@@ -10,7 +10,7 @@ module.exports =
                         const name = decodeURIComponent(encodedNameToBeStored);
                         const kills = killsToBeStored;
                         if (err) console.log(err);
-                        connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily) VALUES ('${name}', ${kills}, ${kills}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${kills}, totalKillsDaily = totalKillsDaily + ${kills}`, (err, result) => {
+                        connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily, online) VALUES ('${name}', ${kills}, ${kills}, 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalKills = totalKills + ${kills}, totalKillsDaily = totalKillsDaily + ${kills}`, (err, result) => {
                             connection.release();
                             return err ? reject(err) : resolve({
                                 name: name, kills: kills
