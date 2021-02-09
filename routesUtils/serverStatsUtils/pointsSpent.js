@@ -1,5 +1,3 @@
-const sqlString = require('sqlstring');
-
 module.exports =
     (encodedNameToBeStored, pointsSpentToBeStored, pool) => {
         return new Promise((resolve, reject) => {
@@ -9,7 +7,7 @@ module.exports =
                         if (err) console.log(err);
                         const name = decodeURIComponent(encodedNameToBeStored);
                         const pointsSpent = pointsSpentToBeStored;
-                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES (${sqlString.escape(name)}, ${pointsSpent}, ${pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}`,
+                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily) VALUES ('${name}', ${pointsSpent}, ${pointsSpent}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}`,
                             (err, result) => {
                                 connection.release();
                                 return err ? reject(err) : resolve({

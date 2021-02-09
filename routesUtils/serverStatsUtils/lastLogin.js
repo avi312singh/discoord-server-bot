@@ -1,5 +1,4 @@
 const moment = require('moment');
-const sqlString = require('sqlstring');
 
 module.exports =
     (encodedNameToBeStored, pool) => {
@@ -10,7 +9,7 @@ module.exports =
                     pool.getConnection((err, connection) => {
                         const name = decodeURIComponent(encodedNameToBeStored);
                         if (err) console.log(err);
-                        connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(name)}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result) => {
+                        connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${name}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}'`, (err, result) => {
                             connection.release();
                             return err ? reject(err) : resolve({
                                 name: name, lastLogin: timestampForLastLogin

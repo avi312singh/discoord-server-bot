@@ -1,4 +1,3 @@
-const sqlString = require('sqlstring');
 
 module.exports = (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableNameToBeStored, pool, recognisedTemporaryTableNames) => {
     return new Promise((resolve, reject) => {
@@ -14,7 +13,7 @@ module.exports = (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableN
                     const tableName = tableNameToBeStored;
                     if (err) console.log(err);
                     connection.query(`INSERT INTO ${tableName} (name, time, score)
-            VALUES (${sqlString.escape(name)}, ${time}, ${score}) ON DUPLICATE KEY UPDATE name = ${sqlString.escape(name)}, time = ${time}, score = ${score}`, (err, result) => {
+            VALUES (${name}, ${time}, ${score}) ON DUPLICATE KEY UPDATE name = ${name}, time = ${time}, score = ${score}`, (err, result) => {
                         connection.release();
                         return err ? reject(err) : resolve({
                             tableName: tableName, name: name, time: time, score: score,

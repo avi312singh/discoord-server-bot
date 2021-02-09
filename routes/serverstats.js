@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
 const chalk = require('chalk');
-const sqlString = require('sqlstring')
 const moment = require('moment');
 const winston = require('winston');
 const _ = require('underscore');
@@ -70,7 +69,7 @@ router.use(function timeLog(req, res, next) {
         pool.getConnection((err, connection) => {
             const name = decodeURIComponent(req.query.name);
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName) VALUES (${sqlString.escape(name)}) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName) VALUES ('${name}') ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     console.log('POST serverstats');
