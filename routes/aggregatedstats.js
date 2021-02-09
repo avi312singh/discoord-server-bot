@@ -12,6 +12,8 @@ const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db pa
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 
+const playerCountUtil = require('../routesUtils/aggregatedStatsUtils/playerCount')
+
 const dir = './logging/'
 
 const logger = winston.createLogger({
@@ -49,29 +51,14 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/playerCount', async (req, res) => {
-    const duration = req.query.duration ? req.query.duration : 288
-    pool.getConnection((err, connection) => {
-        if (err) console.log(err);
-        connection.query(`SELECT
-    time, playerCount
-    FROM
-        (
-        SELECT time, playerCount FROM sys.serverInfo ORDER BY time DESC limit ${duration}
-        ) a
-    ORDER BY
-    time;`, (err, result, fields) => {
-            if (err) console.log(err);
-            if (result) {
-                res.status(200).json({
-                    duration,
-                    response: result
-                })
-                console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(duration) + " records at aggregatedstats/playerCount"))
-            }
+    playerCountUtil(req.query.duration, pool).then(result => {
+        res.status(201).json({ result })
+        console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/playerCount GET"))
+    })
+        .catch(result => {
+            console.log(chalk.red(result))
+            res.status(400).json({ message: result })
         });
-        connection.release();
-        if (err) throw err;
-    });
 })
 
 // TODO: Do we need post for playerCount?
