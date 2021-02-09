@@ -61,34 +61,4 @@ router.get('/playerCount', async (req, res) => {
         });
 })
 
-// TODO: Do we need post for playerCount?
-
-// router.post('/playerCount', async (req, res) => {
-//     const duration = req.query.duration ? req.query.duration : 288
-//     const connection = mysql.createConnection({
-//         host: dbHost,
-//         user: dbUsername,
-//         password: dbPassword,
-//         database: dbName
-//     });
-//     connection.connect((err) => {
-//         if (err) console.log(err);
-//         connection.query(`SELECT time, playerCount FROM sys.serverInfo limit ${duration};`, (err, result, fields) => {
-//             if (err) console.log(err);
-//             if (result) {
-//                 res.status(200).json({
-//                     duration,
-//                     response: result
-//                 })
-//                 console.log(chalk.blue('Query for ' + chalk.whiteBright.underline(duration) + " records"))
-//             }
-//             if (fields) console.log(fields);
-//         });
-//         connection.end((err) => {
-//             if (err)
-//                 console.log("Error when closing connection", err)
-//         });
-//     });
-// })
-
 module.exports = router
