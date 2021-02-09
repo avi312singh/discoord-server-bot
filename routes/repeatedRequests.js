@@ -116,8 +116,6 @@ router.get('/', async (req, res) => {
                 console.log(chalk.magentaBright("Server not online! Waiting for 1 minute"))
                 firstJob.cancel(true)
                 secondJob.cancel(true)
-                firstJob.cancelNext(true)
-                secondJob.cancelNext(true)
             }
 
             console.log(chalk.hex('#DEADED').bold('running first task ************************************************************************************************************************************************************'));
@@ -132,13 +130,13 @@ router.get('/', async (req, res) => {
             const playersInfoUnfiltered = playerInfoToBeCompared[0] !== null && playerInfoToBeCompared[0] instanceof (Array) ? playerInfoToBeCompared[0].map(element => element)
                 : undefined
 
-            const playersInfo = playersInfoUnfiltered.filter(el => el.name !== '' || undefined)
+            if (!playersInfoUnfiltered) {
+                    console.error(chalk.red("************* Server is not online so waiting for 30 seconds before next request to server"))
+                    firstJob.cancel(true)
+                    secondJob.cancel(true)
+                }
 
-            if (!playersInfo) {
-                console.error(chalk.red("************* Error has occurred whilst fetching first set of new players so waiting for 30 seconds before next request to server"))
-                firstJob.cancelNext(true)
-                secondJob.cancelNext(true)
-            }
+            const playersInfo = playersInfoUnfiltered ? playersInfoUnfiltered.filter(el => el.name !== '' || undefined) : firstJob.cancel(true)
 
             if (playersInfo.length == 0 || serverInfo[0].playersnum == 0) {
                 console.log(chalk.green("No one is on the server yet! New Players: ") + JSON.stringify(playersInfo, null, 4))
@@ -185,13 +183,13 @@ router.get('/', async (req, res) => {
             const playersInfoUnfiltered = playersInfoToBeCompared[0] !== null && playersInfoToBeCompared[0] instanceof (Array) ? playersInfoToBeCompared[0].map(element => element)
                 : undefined
 
-            const playersInfo = playersInfoUnfiltered.filter(el => el.name !== '' || undefined)
-
-            if (!playersInfo) {
-                console.error(chalk.red("************* Error has occurred whilst fetching second set of new players so waiting for 30 seconds before next request to server ------- cancelling current scheduled jobs"))
+            if (!playersInfoUnfiltered) {
+                console.error(chalk.red("************* Server is not online so waiting for 30 seconds before next request to server"))
                 firstJob.cancel(true)
                 secondJob.cancel(true)
             }
+
+            const playersInfo = playersInfoUnfiltered ? playersInfoUnfiltered.filter(el => el.name !== '' || undefined) : secondJob.cancel(true)
 
             for (i = 0; i < playersInfo.length; i++) {
                 temporaryDataUtil(encodeURIComponent(playersInfo[i].name), playersInfo[i].duration, playersInfo[i].score, 'playersComparisonSecond', pool, recognisedTemporaryTableNames)
