@@ -1,11 +1,10 @@
 const chalk = require('chalk');
 const query = require("source-server-query");
 const utf8 = require('utf8');
-const mysql = require('mysql');
 
 function directPlayerInfoUtf8Encoded(arrayToBeUtf8d) {
     for (i = 0; i < arrayToBeUtf8d.length; i++) {
-        arrayToBeUtf8d[i].name = mysql.escape(utf8.decode(arrayToBeUtf8d[i].name))
+        arrayToBeUtf8d[i].name = utf8.decode(arrayToBeUtf8d[i].name)
     }
     return arrayToBeUtf8d;
 }

@@ -13,7 +13,7 @@ module.exports = (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableN
                     const tableName = tableNameToBeStored;
                     if (err) console.log(err);
                     connection.query(`INSERT INTO ${tableName} (name, time, score)
-            VALUES (${name}, ${time}, ${score}) ON DUPLICATE KEY UPDATE name = ${name}, time = ${time}, score = ${score}`, (err, result) => {
+            VALUES (?, ${time}, ${score}) ON DUPLICATE KEY UPDATE name = ?, time = ${time}, score = ${score}`,[name, name], (err, result) => {
                         connection.release();
                         return err ? reject(err) : resolve({
                             tableName: tableName, name: name, time: time, score: score,
