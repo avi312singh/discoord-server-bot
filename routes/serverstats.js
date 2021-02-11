@@ -68,7 +68,7 @@ router.use(function timeLog(req, res, next) {
         pool.getConnection((err, connection) => {
             const name = decodeURIComponent(req.query.name);
             if (err) console.log(err);
-            connection.query(`INSERT INTO playerInfo (playerName, online) VALUES (?, true) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`,[name], (err, result, fields) => {
+            connection.query(`INSERT INTO playerInfo (playerName, online) VALUES (?, 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25`, [name], (err, result, fields) => {
                 if (err) console.log(err);
                 if (result) {
                     console.log('POST serverstats');
@@ -76,7 +76,7 @@ router.use(function timeLog(req, res, next) {
                         name: name
                     })
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(name)) + ' added/updated for / POST!'))
-                    console.log({ name: name })
+                    console.log({ name: name, online: true })
                 }
                 if (fields) console.log(fields);
                 connection.release();
@@ -94,7 +94,7 @@ router.use(function timeLog(req, res, next) {
 })
 
 router.post('/lastLogin', (req, res) => {
-    lastLoginUtil(req.query.name)
+    lastLoginUtil(req.query.name, pool)
     .then(result => {
         res.status(201).json(result)
         console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.lastLogin)) + ' added/updated for /lastLogin POST!'))
