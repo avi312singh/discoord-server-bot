@@ -1,7 +1,7 @@
 {
   "name": "discord-bot",
-  "version": "1.1.0",
-  "description": "Discord bot for chivalry server",
+  "version": "2.0.0",
+  "description": "Discord bot and statistics generator for chivalry (source) server",
   "main": "index.js",
   "scripts": {
     "start": "node --optimize_for_size --max-old-space-size=460 --trace-warnings index.js",
