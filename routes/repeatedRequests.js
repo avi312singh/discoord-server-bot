@@ -300,6 +300,7 @@ router.get('/', async (req, res) => {
                         console.log("Reset all rows in playersComparisonFirst table")
                     }
                     if (fields) console.log(fields);
+                    connection.release();
                 });
                 connection.query(`TRUNCATE playersComparisonSecond;`, (err, result, fields) => {
                     if (err) console.log(err);
@@ -307,10 +308,10 @@ router.get('/', async (req, res) => {
                         console.log("Reset all rows in playersComparisonSecond table")
                     }
                     if (fields) console.log(fields);
+                    connection.release();
                 });
-                connection.release();
             });
-
+            pool.end((err) => console.err(err));
             const completedNow = moment().format('HH:mm:ss')
             console.log(chalk.blue('Completed second job at Time: ', chalk.blueBright(completedNow)));
 
