@@ -39,7 +39,7 @@ const logger = winston.createLogger({
 const keyword = keyword => chalk.keyword('blue')(keyword)
 
 const pool = mysql.createPool({
-    connectionLimit: 150,
+    connectionLimit: 64,
     host: dbHost,
     user: dbUsername,
     password: dbPassword,

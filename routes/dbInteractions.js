@@ -37,7 +37,7 @@ router.use(function timeLog(req, res, next) {
 })
 
 const pool = mysql.createPool({
-    connectionLimit: 150,
+    connectionLimit: 64,
     host: dbHost,
     user: dbUsername,
     password: dbPassword,
