@@ -7,7 +7,7 @@ module.exports =
                         if (err) console.log(err);
                         const name = decodeURIComponent(encodedNameToBeStored);
                         const pointsSpent = pointsSpentToBeStored;
-                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily, online) VALUES (?, ${pointsSpent}, ${pointsSpent}, 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}`,
+                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily, online) VALUES (?, ${pointsSpent}, ${pointsSpent}, 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}, online = 1`,
                         [name],
                             (err, result) => {
                                 connection.release();
@@ -18,7 +18,7 @@ module.exports =
                             });
                     });
                 }
-                else reject('Please enter name and point spent in query params');
+                else reject('Please enter name and points spent in query params');
             }
             catch (error) {
                 return reject(error)
