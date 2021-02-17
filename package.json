@@ -4,7 +4,7 @@
   "description": "Discord bot and statistics generator for chivalry (source) server",
   "main": "index.js",
   "scripts": {
-    "start": "node e--trace-warnings index.js",
+    "start": "node --trace-warnings index.js",
     "start-dev": "nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --testTimeout=10000 --watch"
   },
