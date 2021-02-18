@@ -45,8 +45,7 @@ const pool = mysql.createPool({
 });
 
 router.use(function timeLog(req, res, next) {
-    const timestampForRequest = '';
-    timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
+    const timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
     logger.log({
         level: 'info',
         message: `Request received at: ${timestampForRequest} + ' from IP address: ' + ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || null}`,

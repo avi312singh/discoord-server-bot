@@ -66,10 +66,9 @@ const pool = mysql.createPool({
 
 router.get('/', async (req, res) => {
     let running = false;
-    const timestamp = '';
     if (!running) {
         running = true;
-        timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
+        const timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
 
         console.log("GET: repeatedRequests " + timestamp)
         res.status(200).json({
