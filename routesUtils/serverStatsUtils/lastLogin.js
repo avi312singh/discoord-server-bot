@@ -9,7 +9,7 @@ module.exports =
                     pool.getConnection((err, connection) => {
                         const name = decodeURIComponent(encodedNameToBeStored);
                         if (err) console.log(err);
-                        connection.query(`UPDATE playerInfo SET online = 0, totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = ${timestampForLastLogin} WHERE playerName = ? LIMIT 1;`,
+                        connection.query(`UPDATE playerInfo SET online = 0, totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, lastLogin = '${timestampForLastLogin}' WHERE playerName = ? LIMIT 1;`,
                         [name] ,(err, result) => {
                             connection.release();
                             return err ? reject(err) : resolve({
