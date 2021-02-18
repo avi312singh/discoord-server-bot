@@ -45,7 +45,7 @@ const pool = mysql.createPool({
 });
 
 router.use(function timeLog(req, res, next) {
-    const timestampForRequest;
+    const timestampForRequest = '';
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
     logger.log({
         level: 'info',

@@ -66,7 +66,7 @@ const pool = mysql.createPool({
 
 router.get('/', async (req, res) => {
     let running = false;
-    const timestamp;
+    const timestamp = '';
     if (!running) {
         running = true;
         timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
