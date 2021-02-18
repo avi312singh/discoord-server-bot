@@ -14,12 +14,6 @@ const serverInfoUtil = require('../routesUtils/serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
-let running = false;
-let timestamp;
-let newPlayerIndex;
-let oldPlayerIndex;
-let postRequests = [];
-
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
@@ -71,6 +65,8 @@ const pool = mysql.createPool({
 
 
 router.get('/', async (req, res) => {
+    let running = false;
+    const timestamp;
     if (!running) {
         running = true;
         timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
@@ -211,7 +207,7 @@ router.get('/', async (req, res) => {
             const newPlayers = newPlayersUnfiltered.rows.filter(el => el.name !== '' || undefined)
 
             // Compare both arrays with each other and see which elements don't exist in other one
-
+            let postRequests = [];
             // They have left and remove from oldPlayers array
             if (!Array.isArray(oldPlayers) || !oldPlayers.length == 0 || serverInfo[0].playersnum >= 0) {
                 var z = oldPlayers.length
@@ -252,7 +248,8 @@ router.get('/', async (req, res) => {
             for (i = 0; i < newPlayers.length; i++) {
 
                 let scoreDifference = 0;
-
+                const newPlayerIndex;
+                const oldPlayerIndex;
                 newPlayerIndex = _.findIndex(newPlayers, { name: oldPlayers[i].name }) != -1 ? _.findIndex(newPlayers, { name: oldPlayers[i].name }) : _.findIndex(newPlayers, { name: newPlayers[i].name })
                 oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name }) != -1 ? _.findIndex(oldPlayers, { name: newPlayers[i].name }) : _.findIndex(oldPlayers, { name: oldPlayers[i].name })
 

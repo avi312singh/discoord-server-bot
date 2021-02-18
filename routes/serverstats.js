@@ -11,8 +11,6 @@ const pointsSpentUtil = require('../routesUtils/serverStatsUtils/pointsSpent')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
-let timestampForRequest;
-
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
@@ -47,6 +45,7 @@ const pool = mysql.createPool({
 });
 
 router.use(function timeLog(req, res, next) {
+    const timestampForRequest;
     timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
     logger.log({
         level: 'info',

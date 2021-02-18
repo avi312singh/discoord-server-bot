@@ -5,14 +5,12 @@ const chalk = require('chalk');
 const moment = require('moment');
 const winston = require('winston');
 
-let timestampForRequest;        // can be made const
+const playerCountUtil = require('../routesUtils/aggregatedStatsUtils/playerCount')
 
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
 const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
 const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
-
-const playerCountUtil = require('../routesUtils/aggregatedStatsUtils/playerCount')
 
 const dir = './logging/'
 
@@ -37,7 +35,7 @@ const pool = mysql.createPool({
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
-    timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
+    const timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
     logger.log({
         level: 'info',
         message: `'Request received at: ', ${timestampForRequest + ' from IP address: ' + req.headers['x-forwarded-for'] || req.connection.remoteAddress || null}`,
