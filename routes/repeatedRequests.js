@@ -248,8 +248,8 @@ router.get('/', async (req, res) => {
             for (i = 0; i < newPlayers.length; i++) {
 
                 let scoreDifference = 0;
-                const newPlayerIndex;
-                const oldPlayerIndex;
+                const newPlayerIndex = 0;
+                const oldPlayerIndex= 0;
                 newPlayerIndex = _.findIndex(newPlayers, { name: oldPlayers[i].name }) != -1 ? _.findIndex(newPlayers, { name: oldPlayers[i].name }) : _.findIndex(newPlayers, { name: newPlayers[i].name })
                 oldPlayerIndex = _.findIndex(oldPlayers, { name: newPlayers[i].name }) != -1 ? _.findIndex(oldPlayers, { name: newPlayers[i].name }) : _.findIndex(oldPlayers, { name: oldPlayers[i].name })
 
