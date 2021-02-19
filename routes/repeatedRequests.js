@@ -24,6 +24,7 @@ const basicAuthUsername = process.env.BASICAUTHUSERNAME || (() => { new Error("P
 const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("Provide a server IP in env vars") });
 
 const recognisedTemporaryTableNames = ['playersComparisonFirst', 'playersComparisonSecond']
+let running = false;
 
 const users = {};
 users[basicAuthUsername] = basicAuthPassword;
@@ -64,11 +65,10 @@ const pool = mysql.createPool({
 });
 
 
+const timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
 router.get('/', async (req, res) => {
-    let running = false;
     if (!running) {
         running = true;
-        const timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
 
         console.log("GET: repeatedRequests " + timestamp)
         res.status(200).json({
