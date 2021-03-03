@@ -1,5 +1,7 @@
 
-module.exports = (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableNameToBeStored, pool, recognisedTemporaryTableNames) => {
+const pool = require('../../db/db')
+
+module.exports = (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableNameToBeStored, recognisedTemporaryTableNames) => {
     return new Promise((resolve, reject) => {
         try {
             if (encodedNameToBeStored, timeToBeStored, scoreToBeStored, tableNameToBeStored) {

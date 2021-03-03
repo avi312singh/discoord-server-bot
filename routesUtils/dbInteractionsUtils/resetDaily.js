@@ -1,4 +1,6 @@
-module.exports = (pool, chalk, keyword) => {
+const pool = require('../../db/db');
+
+module.exports = (chalk, keyword) => {
     return new Promise((resolve, reject) => {
         try {
             pool.getConnection((err, connection) => {

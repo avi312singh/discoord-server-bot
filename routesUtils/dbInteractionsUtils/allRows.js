@@ -1,4 +1,6 @@
-module.exports = (pool, tableName, recognisedTableNames) => {
+const pool = require('../../db/db');
+
+module.exports = (tableName, recognisedTableNames) => {
     return new Promise((resolve, reject) => {
         try {
             if (tableName) {

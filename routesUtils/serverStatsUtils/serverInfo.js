@@ -1,7 +1,8 @@
 
-
+const pool = require('../../db/db')
 const undefinedCheck = (objectToCheck, ifUndefined) => objectToCheck == undefined ? ifUndefined : objectToCheck;
-module.exports = (playerCountToBeStored, botCountToBeStored, serverNameToBeStored, mapNameToBeStored, pool) => {
+
+module.exports = (playerCountToBeStored, botCountToBeStored, serverNameToBeStored, mapNameToBeStored) => {
     return new Promise((resolve, reject) => {
         try {
             if (!isNaN(playerCountToBeStored) && !isNaN(botCountToBeStored) && serverNameToBeStored && mapNameToBeStored) {

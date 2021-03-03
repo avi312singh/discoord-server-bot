@@ -1,5 +1,7 @@
+const pool = require('../../db/db')
+
 module.exports =
-    (encodedNameToBeStored, killsToBeStored, pool) => {
+    (encodedNameToBeStored, killsToBeStored) => {
         return new Promise((resolve, reject) => {
             try {
                 if (encodedNameToBeStored && killsToBeStored) {

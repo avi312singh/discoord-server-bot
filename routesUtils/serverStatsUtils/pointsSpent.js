@@ -1,5 +1,7 @@
+const pool = require('../../db/db')
+
 module.exports =
-    (encodedNameToBeStored, pointsSpentToBeStored, pool) => {
+    (encodedNameToBeStored, pointsSpentToBeStored) => {
         return new Promise((resolve, reject) => {
             try {
                 if (encodedNameToBeStored && pointsSpentToBeStored) {

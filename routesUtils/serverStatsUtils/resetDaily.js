@@ -1,4 +1,6 @@
-module.exports = (pool) => {
+const pool = require('../../db/db')
+
+module.exports = () => {
     return new Promise((resolve, reject) => {
         try {
             pool.getConnection((err, connection) => {

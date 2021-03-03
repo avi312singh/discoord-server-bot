@@ -1,7 +1,8 @@
 const moment = require('moment');
+const pool = require('../../db/db')
 
 module.exports =
-    (encodedNameToBeStored, pool) => {
+    (encodedNameToBeStored) => {
         const timestampForLastLogin = moment().format('YYYY-MM-DD HH:mm:ss').toString();
         return new Promise((resolve, reject) => {
             try {
