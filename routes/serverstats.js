@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql');
 const chalk = require('chalk');
 const moment = require('moment');
 const winston = require('winston');
@@ -12,10 +11,6 @@ const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
-const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
-const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
-const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
-const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 const basicAuthUsername = process.env.BASICAUTHUSERNAME || (() => { new Error("Provide a server IP in env vars") });
 const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("Provide a server IP in env vars") });
 
@@ -35,14 +30,6 @@ const logger = winston.createLogger({
     ],
 });
 const keyword = keyword => chalk.keyword('blue')(keyword)
-
-const pool = mysql.createPool({
-    connectionLimit: 200,
-    host: dbHost,
-    user: dbUsername,
-    password: dbPassword,
-    database: dbName
-});
 
 router.use(function timeLog(req, res, next) {
     const timestampForRequest = moment().format('YYYY-MM-DD HH:mm:ss')
@@ -92,7 +79,7 @@ router.use(function timeLog(req, res, next) {
 })
 
 router.post('/lastLogin', (req, res) => {
-    lastLoginUtil(req.query.name, pool)
+    lastLoginUtil(req.query.name)
     .then(result => {
         res.status(201).json(result)
         console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.lastLogin)) + ' added/updated for /lastLogin POST!'))
@@ -104,7 +91,7 @@ router.post('/lastLogin', (req, res) => {
 })
 
 router.post('/kills', async (req, res) => {
-    killsUtil(req.query.name, req.query.kills, pool)
+    killsUtil(req.query.name, req.query.kills)
     .then(result => {
         res.status(201).json(result)
         console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.kills)) + ' added/updated for /kills POST!'))
@@ -116,7 +103,7 @@ router.post('/kills', async (req, res) => {
 })
 
 router.post('/pointsSpent', async (req, res) => {
-    pointsSpentUtil(req.query.name, req.query.pointsSpent, pool)
+    pointsSpentUtil(req.query.name, req.query.pointsSpent)
         .then(result => {
             res.status(201).json(result)
             console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.pointsSpent)) + ' added/updated for /pointSpent POST!'))
@@ -129,7 +116,7 @@ router.post('/pointsSpent', async (req, res) => {
 })
 
 router.post('/temporaryData', async (req, res) => {
-    temporaryDataUtil(req.query.name, req.query.time, req.query.score, req.query.tableName, pool, recognisedTemporaryTableNames)
+    temporaryDataUtil(req.query.name, req.query.time, req.query.score, req.query.tableName, recognisedTemporaryTableNames)
         .then(result => {
             res.status(201).json({ message: `Created temporary player inside ${result.tableName}`})
             console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.name)) + " with duration " + chalk.whiteBright.underline(keyword(result.time)) + " and score " + chalk.whiteBright.underline(keyword(result.score)) +

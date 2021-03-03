@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const mysql = require('mysql');
 const chalk = require('chalk');
 const cron = require('node-cron');
 const schedule = require('node-schedule');
@@ -12,14 +11,11 @@ const _ = require('underscore');
 const resetDailyUtil = require('../routesUtils/serverStatsUtils/resetDaily')
 const serverInfoUtil = require('../routesUtils/serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
-const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
+const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData');
+const truncate = require('../routesUtils/repeatedRequestsUtils/truncate');
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
-const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
-const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
-const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
-const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 const basicAuthUsername = process.env.BASICAUTHUSERNAME || (() => { new Error("Provide a server IP in env vars") });
 const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("Provide a server IP in env vars") });
 
@@ -56,15 +52,6 @@ const logger = winston.createLogger({
     ],
 });
 
-const pool = mysql.createPool({
-    connectionLimit: 200,
-    host: dbHost,
-    user: dbUsername,
-    password: dbPassword,
-    database: dbName
-});
-
-
 const timestamp = moment().format('YYYY-MM-DD HH:mm:ss')
 router.get('/', async (req, res) => {
     if (!running) {
@@ -83,7 +70,7 @@ router.get('/', async (req, res) => {
                         .map(element => element.directQueryInfo)
                         .filter(el => el != null)))
 
-            serverInfoUtil(serverInfo[0].playersnum, serverInfo[0].botsnum, serverInfo[0].name, serverInfo[0].map, pool)
+            serverInfoUtil(serverInfo[0].playersnum, serverInfo[0].botsnum, serverInfo[0].name, serverInfo[0].map)
                 .then(result => {
                     console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword('serverInfo') + ' added/updated for serverInfo endpoint!')))
                     console.log({ playerCount: result.playerCount, botCount: result.botCount, serverName: result.serverName, mapName: result.mapName })
@@ -95,7 +82,7 @@ router.get('/', async (req, res) => {
 
         // sends query to set all daily columns to 0 at 00:01 everyday
         cron.schedule('01 00 * * *', async () => {
-            resetDailyUtil(pool)
+            resetDailyUtil()
                 .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 106 AT' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')))))
         })
 
@@ -146,7 +133,7 @@ router.get('/', async (req, res) => {
                     console.error("PlayersInfo at index " + [i] + " has been skipped")
                 }
                 else {
-                    temporaryDataUtil(encodeURIComponent(playersInfo[i].name), playersInfo[i].duration, playersInfo[i].score, 'playersComparisonFirst', pool, recognisedTemporaryTableNames)
+                    temporaryDataUtil(encodeURIComponent(playersInfo[i].name), playersInfo[i].duration, playersInfo[i].score, 'playersComparisonFirst', recognisedTemporaryTableNames)
                         .then(result => {
                             console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.name)) + " with duration " + chalk.whiteBright.underline(keyword(result.time)) + " and score " + chalk.whiteBright.underline(keyword(result.score)) + ' added into ' + result.tableName))
                         })
@@ -187,7 +174,7 @@ router.get('/', async (req, res) => {
             const playersInfo = playersInfoUnfiltered ? playersInfoUnfiltered.filter(el => el.name !== '' || undefined) : secondJob.cancel(true)
 
             for (i = 0; i < playersInfo.length; i++) {
-                temporaryDataUtil(encodeURIComponent(playersInfo[i].name), playersInfo[i].duration, playersInfo[i].score, 'playersComparisonSecond', pool, recognisedTemporaryTableNames)
+                temporaryDataUtil(encodeURIComponent(playersInfo[i].name), playersInfo[i].duration, playersInfo[i].score, 'playersComparisonSecond', recognisedTemporaryTableNames)
                     .then(result => {
                         console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.name)) + " with duration " + chalk.whiteBright.underline(keyword(result.time)) + " and score " + chalk.whiteBright.underline(keyword(result.score)) + ' added into ' + result.tableName))
                     })
@@ -288,24 +275,7 @@ router.get('/', async (req, res) => {
                 .catch(console.error)
 
             //  Need to truncate temp tables playersComparisonFirst and playersComparisonSecond
-            pool.getConnection((err, connection) => {
-                if (err) console.log(err);
-                connection.query(`TRUNCATE playersComparisonFirst;`, (err, result, fields) => {
-                    if (err) console.log(err);
-                    if (result) {
-                        console.log("Reset all rows in playersComparisonFirst table")
-                    }
-                    if (fields) console.log(fields);
-                });
-                connection.query(`TRUNCATE playersComparisonSecond;`, (err, result, fields) => {
-                    if (err) console.log(err);
-                    if (result) {
-                        console.log("Reset all rows in playersComparisonSecond table")
-                    }
-                    if (fields) console.log(fields);
-                    connection.release();
-                });
-            });
+            truncate();
             const completedNow = moment().format('HH:mm:ss')
             console.log(chalk.blue('Completed second job at Time: ', chalk.blueBright(completedNow)));
 

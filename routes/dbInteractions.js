@@ -1,15 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql');
 const moment = require('moment');
 const winston = require('winston');
 const allRowsUtil = require('../routesUtils/dbInteractionsUtils/allRows');
 const resetDailyUtil = require('../routesUtils/dbInteractionsUtils/resetDaily');
-
-const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
-const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
-const dbUsername = process.env.DBUSER || (() => { new Error("Provide a db username in env vars") });
-const dbName = process.env.DBNAME || (() => { new Error("Provide a db username in env vars") });
 
 const chalk = require('chalk');
 
@@ -36,18 +30,10 @@ router.use(function timeLog(req, res, next) {
     next()
 })
 
-const pool = mysql.createPool({
-    connectionLimit: 200,
-    host: dbHost,
-    user: dbUsername,
-    password: dbPassword,
-    database: dbName
-});
-
 const recognisedTableNames = ['aggregatedInfo', 'playerInfo', 'playersComparisonFirst', 'playersComparisonSecond', 'serverInfo']
 
 router.get('/resetDaily', async (req, res) => {
-    resetDailyUtil(pool, chalk, keyword)
+    resetDailyUtil(chalk, keyword)
         .then(result => {
             res.status(201).json({ message: result })
             console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')) + ' for /resetDaily GET'))
@@ -59,7 +45,7 @@ router.get('/resetDaily', async (req, res) => {
 })
 
 router.get('/allRows', async (req, res) => {
-    allRowsUtil(pool, req.query.tableName, recognisedTableNames)
+    allRowsUtil(req.query.tableName, recognisedTableNames)
         .then(result => {
             res.status(201).json({result})
             console.log(chalk.blue('Successfully got all data from ' + chalk.whiteBright.underline(keyword(req.query.tableName)) + ' for /allRows GET'))
