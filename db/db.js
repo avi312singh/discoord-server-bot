@@ -8,8 +8,8 @@ const dbName = process.env.DBNAME || (() => { new Error("Provide a db username i
 const pool = mysql.createPool({
     connectionLimit: 40,
     host: dbHost,
-    user: dbPassword,
-    password: dbUsername,
+    user: dbUsername,
+    password: dbPassword,
     database: dbName
 });
 
