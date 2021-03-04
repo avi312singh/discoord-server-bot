@@ -20,6 +20,8 @@ WORKDIR /
 COPY . ./
 RUN npm install
 
+RUN ls
+
 EXPOSE 666
 
 CMD node --trace-warnings index.js

@@ -10,6 +10,8 @@ const pointsSpentUtil = require('../routesUtils/serverStatsUtils/pointsSpent')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
+const pool = require('../../db/db')
+
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const basicAuthUsername = process.env.BASICAUTHUSERNAME || (() => { new Error("Provide a server IP in env vars") });
 const basicAuthPassword = process.env.BASICAUTHPASSWORD || (() => { new Error("Provide a server IP in env vars") });
