@@ -34,10 +34,6 @@ users[basicAuthUsername] = basicAuthPassword;
 
 const app = express();
 
-
-// app.set('port', (process.env.PORT || 8080));
-
-
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(httpsOptions, app);
 
@@ -51,11 +47,8 @@ httpsServer.listen(8443);
   response.status(200).json({ status: result });
 })
 
+app.use(cors())
 
-// TODO: REMOVE THIS AFTER TEMP TESTING
-// app.use(cors())
-
-// basic auth credentials - not working on repeatedRequests?
 app.use(basicAuth(
   {
     users: {
