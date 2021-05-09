@@ -46,9 +46,14 @@ httpsServer.listen(8443);
 
   console.log('App is running, server is listening on http 8080 and https 8443');
 
+  app.get('/', function (request, response) {
+  const result = 'App is running'
+  response.status(200).json({ status: result });
+})
+
 
 // TODO: REMOVE THIS AFTER TEMP TESTING
-app.use(cors())
+// app.use(cors())
 
 // basic auth credentials - not working on repeatedRequests?
 app.use(basicAuth(
