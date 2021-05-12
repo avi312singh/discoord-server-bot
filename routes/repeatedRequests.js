@@ -9,6 +9,8 @@ const winston = require('winston');
 const _ = require('underscore');
 
 const resetDailyUtil = require('../routesUtils/serverStatsUtils/resetDaily')
+const resetWeeklyUtil = require('../routesUtils/serverStatsUtils/resetWeekly')
+const resetMonthlyUtil = require('../routesUtils/serverStatsUtils/resetMonthly')
 const serverInfoUtil = require('../routesUtils/serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData');
@@ -83,7 +85,19 @@ router.get('/', async (req, res) => {
         // sends query to set all daily columns to 0 at 00:01 everyday
         cron.schedule('01 00 * * *', async () => {
             resetDailyUtil()
-                .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 106 AT' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')))))
+                .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 86 in repeated requests AT ' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')))))
+        })
+
+        // sends query to set all weekly columns to 0 at 00:01 every Monday
+        cron.schedule('01 00 * * 1', async () => {
+            resetWeeklyUtil()
+                .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 92 in repeated requests AT ' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsWeekly, totalPointsSpentWeekly, totalTimeWeekly to ' + chalk.whiteBright.underline(keyword('0')))))
+        })
+
+        // sends query to set all daily columns to 0 at 00:01 every 1st
+        cron.schedule('01 00 1 * *', async () => {
+            resetMonthlyUtil()
+                .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 98 in repeated requests AT ' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsWeekly, totalPointsSpentWeekly, totalTimeWeekly to ' + chalk.whiteBright.underline(keyword('0')))))
         })
 
         // initial request of players every 15 seconds to playersComparisonCache table

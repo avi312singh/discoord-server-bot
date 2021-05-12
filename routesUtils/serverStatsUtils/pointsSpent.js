@@ -9,7 +9,8 @@ module.exports =
                         if (err) console.log(err);
                         const name = decodeURIComponent(encodedNameToBeStored);
                         const pointsSpent = pointsSpentToBeStored;
-                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily, online) VALUES (?, ${pointsSpent}, ${pointsSpent}, 1) ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}, online = 1`,
+                        connection.query(`INSERT INTO playerInfo (playerName, totalPointsSpent, totalPointsSpentDaily, totalPointsSpentWeekly, totalPointsSpentMonthly, online) VALUES (?, ${pointsSpent}, ${pointsSpent}, ${pointsSpent}, ${pointsSpent}, 1)
+                        ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, totalTimeWeekly = totalTimeWeekly + .25, totalTimeMonthly = totalTimeMonthly + .25, totalPointsSpent = totalPointsSpent + ${pointsSpent}, totalPointsSpentDaily = totalPointsSpentDaily + ${pointsSpent}, online = 1`,
                         [name],
                             (err, result) => {
                                 connection.release();
