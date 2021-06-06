@@ -15,7 +15,8 @@ module.exports = (durationFromRequest, pool) => {
                             if (err) console.log(err);
                             return err ? reject(err) : resolve({
                                 duration,
-                                response: result
+                                // remove .map() to return with keys
+                                response: result.map(Object.values)
                             });
                         });
                         connection.release();
