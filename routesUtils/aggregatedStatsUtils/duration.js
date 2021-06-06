@@ -9,7 +9,7 @@ module.exports = (durationFromRequest, pool) => {
                 switch (duration) {
                     // weekly
                     case 2016:
-                        connection.query(`SELECT SUM(totalKillsWeekly) as totalKillsWeekly FROM sys.playerInfo;`,
+                        connection.query(`SELECT SUM(totalTimeWeekly) as totalTimeWeekly FROM sys.playerInfo;`,
                             (err, result) => {
                                 if (err) console.log(err);
                                 return err ? reject(err) : resolve({
@@ -22,7 +22,7 @@ module.exports = (durationFromRequest, pool) => {
                         break;
                     // monthly
                     case 8760:
-                        connection.query(`SELECT SUM(totalKillsMonthly) as totalKillsMonthly FROM sys.playerInfo;`,
+                        connection.query(`SELECT SUM(totalTimeMonthly) as totalTimeMonthly FROM sys.playerInfo;`,
                             (err, result) => {
                                 if (err) console.log(err);
                                 return err ? reject(err) : resolve({
@@ -35,7 +35,7 @@ module.exports = (durationFromRequest, pool) => {
                         break;
                     // all
                     case 666:
-                        connection.query(`SELECT SUM(totalKills) as totalKills FROM sys.playerInfo;`,
+                        connection.query(`SELECT SUM(totalTime) as totalTime FROM sys.playerInfo;`,
                             (err, result) => {
                                 if (err) console.log(err);
                                 return err ? reject(err) : resolve({
@@ -48,7 +48,7 @@ module.exports = (durationFromRequest, pool) => {
                         break;
                     // daily
                     case 288:
-                        connection.query(`SELECT SUM(totalKillsDaily) as totalKillsDaily FROM sys.playerInfo;`,
+                        connection.query(`SELECT SUM(totalTimeDaily) as totalTimeDaily FROM sys.playerInfo;`,
                             (err, result) => {
                                 if (err) console.log(err);
                                 return err ? reject(err) : resolve({
@@ -61,7 +61,7 @@ module.exports = (durationFromRequest, pool) => {
                         break;
                     // all columns
                     case 999:
-                        connection.query(`SELECT SUM(totalKillsDaily), SUM(totalKillsWeekly), SUM(totalKillsMonthly), SUM(totalKills) FROM sys.playerInfo;`,
+                        connection.query(`SELECT SUM(totalTimeDaily), SUM(totalTimeWeekly), SUM(totalTimeMonthly), SUM(totalTime) FROM sys.playerInfo;`,
                             (err, result) => {
                                 if (err) console.log(err);
                                 const durations = [
@@ -74,8 +74,10 @@ module.exports = (durationFromRequest, pool) => {
                                     duration,
                                     response: durations.map((duration, index) => {
                                         return {
-                                        name: duration,
-                                        kills: Object.values(result[0])[index]}})
+                                            name: duration,
+                                            kills: Math.round(Object.values(result[0])[index])
+                                        }
+                                    })
                                 })
                             });
                         connection.release();
