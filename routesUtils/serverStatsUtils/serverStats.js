@@ -4,7 +4,8 @@ const utf8 = require('utf8');
 
 function directPlayerInfoUtf8Encoded(arrayToBeUtf8d) {
     for (i = 0; i < arrayToBeUtf8d.length; i++) {
-        arrayToBeUtf8d[i].name = utf8.decode(arrayToBeUtf8d[i].name)
+        arrayToBeUtf8d[i].name = utf8.decode(arrayToBeUtf8d[i].name);
+        delete arrayToBeUtf8d[i].index;
     }
     return arrayToBeUtf8d;
 }
