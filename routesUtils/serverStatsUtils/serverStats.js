@@ -29,6 +29,8 @@ function directPlayerInfoUtf8Encoded(arrayToBeUtf8d) {
                     throw error;
                 }
 
+                directQueryInfo["status"]="online"
+
                 allServerInfo.push({ directQueryInfo: directQueryInfo })
                 allServerInfo.push({ directPlayerInfo: directPlayerInfoUtf8Encoded(directPlayerInfo) })
                 return allServerInfo
@@ -45,7 +47,8 @@ function directPlayerInfoUtf8Encoded(arrayToBeUtf8d) {
                         "appid": 0,
                         "playersnum": 0,
                         "maxplayers": 64,
-                        "botsnum": 0
+                        "botsnum": 0,
+                        "status": "offline"
                     }
                 })
                 allServerInfo.push({ directPlayerInfo: [] })
