@@ -8,6 +8,7 @@ const winston = require('winston');
 const playerCountUtil = require('../routesUtils/aggregatedStatsUtils/playerCount')
 const killCountUtil = require('../routesUtils/aggregatedStatsUtils/killCount')
 const durationUtil = require('../routesUtils/aggregatedStatsUtils/duration')
+const topPlayersUtil = require('../routesUtils/aggregatedStatsUtils/topPlayers')
 
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
@@ -76,6 +77,17 @@ router.get('/duration', async (req, res) => {
     durationUtil(req.query.duration, pool).then(result => {
         res.status(201).json({ result })
         console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/duration GET"))
+    })
+        .catch(result => {
+            console.log(chalk.red(result))
+            res.status(400).json({ message: result })
+        });
+})
+
+router.get('/topPlayers', async (req, res) => {
+    topPlayersUtil(req.query.duration, pool).then(result => {
+        res.status(201).json({ result })
+        console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/topPlayers GET"))
     })
         .catch(result => {
             console.log(chalk.red(result))
