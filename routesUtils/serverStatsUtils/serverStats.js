@@ -26,11 +26,7 @@ function directPlayerInfoUtf8Encoded(arrayToBeUtf8d) {
                         .then(query.close)
                         .catch(console.error);
 
-                if (directQueryInfo === {}) {
-                    throw error;
-                }
-
-                directQueryInfo["status"]="online"
+                directQueryInfo instanceof Error ? directQueryInfo["status"] = "offline" : directQueryInfo["status"] = "online"
 
                 allServerInfo.push({ directQueryInfo: directQueryInfo })
                 allServerInfo.push({ directPlayerInfo: directPlayerInfoUtf8Encoded(directPlayerInfo) })
