@@ -10,7 +10,8 @@ module.exports =
                     }
                     pool.getConnection((err, connection) => {
                         const name = decodeURIComponent(encodedNameToBeStored);
-                        const kills = killsToBeStored;
+                        let kills = killsToBeStored;
+                        kills > 12 ? kills = 1 : kills = kills;
                         if (err) console.log(err);
                         connection.query(`INSERT INTO playerInfo (playerName, totalKills, totalKillsDaily, totalKillsWeekly, totalKillsMonthly, online) VALUES (?, ${kills}, ${kills}, ${kills}, ${kills}, 1)
                         ON DUPLICATE KEY UPDATE totalTime = totalTime + .25, totalTimeDaily = totalTimeDaily + .25, totalTimeWeekly = totalTimeWeekly + .25, totalTimeMonthly = totalTimeMonthly + .25,
