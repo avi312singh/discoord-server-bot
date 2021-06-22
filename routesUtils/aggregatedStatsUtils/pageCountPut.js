@@ -7,11 +7,11 @@ module.exports = (pageFromRequest, pool) => {
                 ? reject('Not a valid page') : pageCheckIfInParams.toString()
             pool.getConnection((err, connection) => {
                 if (err) console.log(err);
-                connection.query(`SELECT * FROM sys.pageCount where page='${page}'`,
+                        connection.query(`INSERT INTO pageCount (page) VALUES ('${page}') ON DUPLICATE KEY UPDATE hits = hits + 1`,
                         (err, result) => {
                             if (err) console.log(err);
                             return err ? reject(err) : resolve({
-                                result,
+                                page: page,
                             });
                         });
                         connection.release();

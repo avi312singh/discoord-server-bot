@@ -35,7 +35,7 @@ const recognisedTableNames = ['aggregatedInfo', 'playerInfo', 'playersComparison
 router.get('/resetDaily', async (req, res) => {
     resetDailyUtil(chalk, keyword)
         .then(result => {
-            res.status(201).json({ message: result })
+            res.status(200).json({ message: result })
             console.log(chalk.blue('Reset totalKillsDaily, totalPointsSpentDaily, totalTimeDaily to ' + chalk.whiteBright.underline(keyword('0')) + ' for /resetDaily GET'))
         })
         .catch(result => {
@@ -47,7 +47,7 @@ router.get('/resetDaily', async (req, res) => {
 router.get('/allRows', async (req, res) => {
     allRowsUtil(req.query.tableName, recognisedTableNames)
         .then(result => {
-            res.status(201).json({result})
+            res.status(200).json({result})
             console.log(chalk.blue('Successfully got all data from ' + chalk.whiteBright.underline(keyword(req.query.tableName)) + ' for /allRows GET'))
         })
         .catch(result => {

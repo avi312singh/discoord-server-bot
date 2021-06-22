@@ -10,6 +10,7 @@ const killCountUtil = require('../routesUtils/aggregatedStatsUtils/killCount')
 const durationUtil = require('../routesUtils/aggregatedStatsUtils/duration')
 const topPlayersUtil = require('../routesUtils/aggregatedStatsUtils/topPlayers')
 const pageCountUtil = require('../routesUtils/aggregatedStatsUtils/pageCount')
+const pageCountPutUtil = require('../routesUtils/aggregatedStatsUtils/pageCountPut')
 
 const dbHost = process.env.DBENDPOINT || (() => { new Error("Provide a db endpoint in env vars") });
 const dbPassword = process.env.DBPASSWORD || (() => { new Error("Provide a db password in env vars") });
@@ -54,7 +55,7 @@ router.get('/', async (req, res) => {
 
 router.get('/playerCount', async (req, res) => {
     playerCountUtil(req.query.duration, pool).then(result => {
-        res.status(201).json({ result })
+        res.status(200).json({ result })
         console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/playerCount GET"))
     })
         .catch(result => {
@@ -65,7 +66,7 @@ router.get('/playerCount', async (req, res) => {
 
 router.get('/killCount', async (req, res) => {
     killCountUtil(req.query.duration, pool).then(result => {
-        res.status(201).json({ result })
+        res.status(200).json({ result })
         console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/killCount GET"))
     })
         .catch(result => {
@@ -76,7 +77,7 @@ router.get('/killCount', async (req, res) => {
 
 router.get('/duration', async (req, res) => {
     durationUtil(req.query.duration, pool).then(result => {
-        res.status(201).json({ result })
+        res.status(200).json({ result })
         console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/duration GET"))
     })
         .catch(result => {
@@ -87,7 +88,7 @@ router.get('/duration', async (req, res) => {
 
 router.get('/topPlayers', async (req, res) => {
     topPlayersUtil(req.query.duration, pool).then(result => {
-        res.status(201).json({ result })
+        res.status(200).json({ result })
         console.log(chalk.blue('Completed query for ' + chalk.whiteBright.underline(result.duration) + " records at aggregatedstats/topPlayers GET"))
     })
         .catch(result => {
@@ -98,8 +99,19 @@ router.get('/topPlayers', async (req, res) => {
 
 router.get('/pageCount', async (req, res) => {
     pageCountUtil(req.query.page, pool).then(result => {
-        res.status(201).json({ result })
-        console.log(chalk.blue('Incremented page count for ' + chalk.whiteBright.underline(result.page) + " at aggregatedstats/pageCount GET"))
+        res.status(200).json({ result })
+        console.log(chalk.blue('Got page count for ' + chalk.whiteBright.underline(result.page) + " at aggregatedstats/pageCount GET"))
+    })
+        .catch(result => {
+            console.log(chalk.red(result))
+            res.status(400).json({ message: result })
+        });
+})
+
+router.put('/pageCount', async (req, res) => {
+    pageCountPutUtil(req.query.page, pool).then(result => {
+        res.status(200).json({ message: `Incremented page count for ${result.page} at aggregatedstats/pageCount PUT` })
+        console.log(chalk.blue('Incremented page count for ' + chalk.whiteBright.underline(result.page) + " at aggregatedstats/pageCount PUT"))
     })
         .catch(result => {
             console.log(chalk.red(result))
