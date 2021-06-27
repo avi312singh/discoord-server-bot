@@ -110,11 +110,11 @@ router.get('/', async (req, res) => {
         })
 
         // sends query to steam to get all imageSrc of top players every hour
-        cron.schedule('0 * * * *', async () => {
+        // cron.schedule('0 * * * *', async () => {
             const topPlayersRequest = await topPlayers('', pool)
             const topPlayersResponse = topPlayersRequest.response
             const flattenedTopPlayers = [].concat.apply([], topPlayersResponse)
-            for (var i = 0; i < flattenedTopPlayers.length; i += 4) {
+            for (var i = 0; i < flattenedTopPlayers.length; i += 5) {
                 try {
                     let sessionId;
                     console.log("current player: ", flattenedTopPlayers[i])
@@ -127,7 +127,7 @@ router.get('/', async (req, res) => {
                     continue;
                 }
             }
-        })
+        // })
 
         // sends query to steam to get all imageSrc of all players at 05:01 everyday
         cron.schedule('01 5 * * *', async () => {
@@ -248,7 +248,8 @@ router.get('/', async (req, res) => {
             // Now that we have sent both players to the database - compare them both
             console.log("********* START COMPARISON ***************")
             const oldPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
-            const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
+            const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/
+            ?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
             const oldPlayers = oldPlayersUnfiltered.rows.filter(el => el.name !== '' || undefined)
