@@ -7,6 +7,7 @@ const winston = require('winston');
 const lastLoginUtil = require('../routesUtils/serverStatsUtils/lastLogin')
 const killsUtil = require('../routesUtils/serverStatsUtils/kills')
 const pointsSpentUtil = require('../routesUtils/serverStatsUtils/pointsSpent')
+const imageSrcUtil = require('../routesUtils/serverStatsUtils/imageSrc')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData')
 
@@ -80,6 +81,18 @@ router.use(function timeLog(req, res, next) {
     }
 })
 
+router.post('/imageSrc', async (req, res) => {
+    imageSrcUtil(req.query.name, req.query.imageSrc)
+        .then(result => {
+            res.status(201).json(result)
+            console.log(chalk.blue('Database entry ' + chalk.whiteBright.underline(keyword(result.lastLogin)) + ' added/updated for /imageSrc POST!'))
+            console.log({ name: result.name, lastLogin: result.imageSrc })
+        })
+        .catch(result => {
+            console.log(chalk.red(result))
+            res.status(400).json({ message: result })
+        })
+})
 router.post('/lastLogin', (req, res) => {
     lastLoginUtil(req.query.name)
     .then(result => {

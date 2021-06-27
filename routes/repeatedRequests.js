@@ -14,7 +14,14 @@ const resetMonthlyUtil = require('../routesUtils/serverStatsUtils/resetMonthly')
 const serverInfoUtil = require('../routesUtils/serverStatsUtils/serverInfo')
 const serverStatsUtil = require('../routesUtils/serverStatsUtils/serverStats')
 const temporaryDataUtil = require('../routesUtils/serverStatsUtils/temporaryData');
+const imageSrcUtil = require('../routesUtils/serverStatsUtils/imageSrc');
 const truncate = require('../routesUtils/repeatedRequestsUtils/truncate');
+const topPlayers = require('../routesUtils/aggregatedStatsUtils/topPlayers');
+const allRows = require('../routesUtils/dbInteractionsUtils/allRows.js');
+const steamRequest = require('../routesUtils/repeatedRequestsUtils/steamRequest');
+const steamSessionRequest = require('../routesUtils/repeatedRequestsUtils/steamSessionIdRequest');
+
+const pool = require('../db/db');
 
 const serverIp = process.env.SERVERIP || (() => { new Error("Provide a server IP in env vars") });
 const endpoint = process.env.APIENDPOINT || (() => { new Error("Provide a api endpoint in env vars") });
@@ -64,6 +71,8 @@ router.get('/', async (req, res) => {
             message: "Initiating repeated requests ", timestamp
         })
 
+        // Start running all scheduled tasks
+
         // sends player count every 5 mins to serverInfo table
         cron.schedule('*/5 * * * *', async () => {
             const serverInfo = await getNewPlayers()
@@ -100,6 +109,45 @@ router.get('/', async (req, res) => {
                 .then(console.log(chalk.blue('I WAS TRIGGERED ON LINE 98 in repeated requests AT ' + moment().format('YYYY-MM-DD HH:mm:ss') + 'Reset totalKillsWeekly, totalPointsSpentWeekly, totalTimeWeekly to ' + chalk.whiteBright.underline(keyword('0')))))
         })
 
+        // sends query to steam to get all imageSrc of top players every hour
+        cron.schedule('0 * * * *', async () => {
+            const topPlayersRequest = await topPlayers('', pool)
+            const topPlayersResponse = topPlayersRequest.response
+            const flattenedTopPlayers = [].concat.apply([], topPlayersResponse)
+            for (var i = 0; i < flattenedTopPlayers.length; i += 4) {
+                try {
+                    let sessionId;
+                    console.log("current player: ", flattenedTopPlayers[i])
+                    sessionId = await steamSessionRequest()
+                    console.log("sessionId: ", sessionId)
+                    const imageSrc = await steamRequest(sessionId, flattenedTopPlayers[i])
+                    await imageSrcUtil(encodeURIComponent(flattenedTopPlayers[i]), imageSrc)
+                } catch (error) {
+                    console.log("Error has occurred during steam requests for avatar picture for top players started at " + moment().format('YYYY-MM-DD HH:mm:ss') + ": " + error)
+                    continue;
+                }
+            }
+        })
+
+        // sends query to steam to get all imageSrc of all players at 05:01 everyday
+        cron.schedule('01 5 * * *', async () => {
+            const allRowsRequest = await allRows('playerInfo', 'playerInfo')
+            const allRowsResponse = allRowsRequest.rows
+            for (var i = 0; i < allRowsResponse.length; i++) {
+                try {
+                    let sessionId;
+                    console.log("current player: ", allRowsResponse[i].playerName)
+                    sessionId = await steamSessionRequest()
+                    console.log("sessionId: ", sessionId)
+                    const imageSrc = await steamRequest(sessionId, allRowsResponse[i].playerName)
+                    await imageSrcUtil(encodeURIComponent(allRowsResponse[i].playerName), imageSrc)
+                } catch (error) {
+                    console.log("Error has occurred during steam requests for avatar picture for all players started at " + moment().format('YYYY-MM-DD HH:mm:ss') + ": " + error)
+                    continue;
+                }
+            }
+        })
+
         // initial request of players every 15 seconds to playersComparisonCache table
         const firstJob = schedule.scheduleJob({ rule: '*/15 * * * * *' }, async (fireDate) => {
 
@@ -127,10 +175,10 @@ router.get('/', async (req, res) => {
                 : undefined
 
             if (!playersInfoUnfiltered) {
-                    console.error(chalk.red("************* Server is not online so waiting for 30 seconds before next request to server"))
-                    firstJob.cancel(true)
-                    secondJob.cancel(true)
-                }
+                console.error(chalk.red("************* Server is not online so waiting for 30 seconds before next request to server"))
+                firstJob.cancel(true)
+                secondJob.cancel(true)
+            }
 
             const playersInfo = playersInfoUnfiltered ? playersInfoUnfiltered.filter(el => el.name !== '' || undefined) : firstJob.cancel(true)
 
