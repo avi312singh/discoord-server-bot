@@ -133,25 +133,28 @@ router.get('/', async (req, res) => {
             }
         })
 
-        // sends query to steam to get all imageSrc of all players at 05:01 everyday
-        cron.schedule('01 5 * * *', async () => {
-            console.log("Sending query to steam to get all imageSrc of top players every due to 05:01")
-            const allRowsRequest = await allRows('playerInfo', 'playerInfo')
-            const allRowsResponse = allRowsRequest.rows
-            for (var i = 0; i < allRowsResponse.length; i++) {
-                try {
-                    let sessionId;
-                    console.log("current player: ", allRowsResponse[i].playerName)
-                    sessionId = await steamSessionRequest()
-                    console.log("sessionId: ", sessionId)
-                    const imageSrc = await steamRequest(sessionId, allRowsResponse[i].playerName)
-                    await imageSrcUtil(encodeURIComponent(allRowsResponse[i].playerName), imageSrc)
-                } catch (error) {
-                    console.log("Error has occurred during steam requests for avatar picture for all players started at " + moment().format('YYYY-MM-DD HH:mm:ss') + ": " + error)
-                    continue;
-                }
-            }
-        })
+
+        //TODO: THIS NEEDS TO BE MOVED TO ITS OWN ROUTE AS IT KILLS MEMORY
+
+        // // sends query to steam to get all imageSrc of all players at 05:01 everyday
+        // cron.schedule('01 5 * * *', async () => {
+        //     console.log("Sending query to steam to get all imageSrc of top players every due to 05:01")
+        //     const allRowsRequest = await allRows('playerInfo', 'playerInfo')
+        //     const allRowsResponse = allRowsRequest.rows
+        //     for (var i = 0; i < allRowsResponse.length; i++) {
+        //         try {
+        //             let sessionId;
+        //             console.log("current player: ", allRowsResponse[i].playerName)
+        //             sessionId = await steamSessionRequest()
+        //             console.log("sessionId: ", sessionId)
+        //             const imageSrc = await steamRequest(sessionId, allRowsResponse[i].playerName)
+        //             await imageSrcUtil(encodeURIComponent(allRowsResponse[i].playerName), imageSrc)
+        //         } catch (error) {
+        //             console.log("Error has occurred during steam requests for avatar picture for all players started at " + moment().format('YYYY-MM-DD HH:mm:ss') + ": " + error)
+        //             continue;
+        //         }
+        //     }
+        // })
 
         // initial request of players every 15 seconds to playersComparisonCache table
         const firstJob = schedule.scheduleJob({ rule: '*/15 * * * * *' }, async (fireDate) => {
