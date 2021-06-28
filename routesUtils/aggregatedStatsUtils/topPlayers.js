@@ -7,7 +7,7 @@ module.exports = (durationFromRequest, pool) => {
                 if (err) console.log(err);
                 switch (duration) {
                     case 288:
-                        connection.query(`SELECT playername, ceiling(totalKillsWeekly) as totalKillsWeekly, ceiling(totalTimeWeekly) as totalTimeWeekly, ROUND(totalKillsWeekly/totalTimeWeekly, 2) as killsPerTimeSpentRatio,imageSrc
+                        connection.query(`SELECT playername, ceiling(totalKillsWeekly) as totalKillsWeekly, ceiling(totalTimeWeekly) as totalTimeWeekly, ROUND(totalKillsWeekly/totalTimeWeekly, 2) as killsPerTimeSpentRatio, imageSrc
                         FROM sys.playerInfo
                         WHERE totalKillsWeekly != 0
                         ORDER BY totalKillsWeekly DESC;`,

@@ -80,6 +80,9 @@ router.get('/', async (req, res) => {
                     eachObject
                         .map(element => element.directQueryInfo)
                         .filter(el => el != null)))
+                .catch(result => {
+                    console.log(chalk.red(result))
+                })
 
             serverInfoUtil(serverInfo[0].playersnum, serverInfo[0].botsnum, serverInfo[0].name, serverInfo[0].map)
                 .then(result => {
@@ -172,6 +175,9 @@ router.get('/', async (req, res) => {
                     eachObject
                         .map(element => element.directPlayerInfo)
                         .filter(el => el != null)))
+                .catch(result => {
+                    console.log(chalk.red(result))
+                })
 
             const playersInfoUnfiltered = playerInfoToBeCompared[0] !== null && playerInfoToBeCompared[0] instanceof (Array) ? playerInfoToBeCompared[0].map(element => element)
                 : undefined
@@ -250,8 +256,7 @@ router.get('/', async (req, res) => {
             // Now that we have sent both players to the database - compare them both
             console.log("********* START COMPARISON ***************")
             const oldPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonFirst`, axiosBasicAuthConfig).then(element => element.data.result)
-            const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/
-            ?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
+            const newPlayersUnfiltered = await axios.get(`${endpoint}dbinteractions/allRows?tableName=playersComparisonSecond`, axiosBasicAuthConfig).then(element => element.data.result)
 
             // Remove entries where they have just joined and server hasn't loaded name yet
             const oldPlayers = oldPlayersUnfiltered.rows.filter(el => el.name !== '' || undefined)
@@ -343,11 +348,6 @@ router.get('/', async (req, res) => {
             truncate();
             const completedNow = moment().format('HH:mm:ss')
             console.log(chalk.blue('Completed second job at Time: ', chalk.blueBright(completedNow)));
-
-            process.on('unhandledRejection', (reason, p) => {
-                console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-                // application specific logging, throwing an error, or other logic here
-            });
 
         });
 
