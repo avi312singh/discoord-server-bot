@@ -110,7 +110,8 @@ router.get('/', async (req, res) => {
         })
 
         // sends query to steam to get all imageSrc of top players every hour
-        // cron.schedule('0 * * * *', async () => {
+        cron.schedule('0 * * * *', async () => {
+            console.log("Sending query to steam to get all imageSrc of top players every due to start of hour")
             const topPlayersRequest = await topPlayers('', pool)
             const topPlayersResponse = topPlayersRequest.response
             const flattenedTopPlayers = [].concat.apply([], topPlayersResponse)
@@ -127,10 +128,11 @@ router.get('/', async (req, res) => {
                     continue;
                 }
             }
-        // })
+        })
 
         // sends query to steam to get all imageSrc of all players at 05:01 everyday
         cron.schedule('01 5 * * *', async () => {
+            console.log("Sending query to steam to get all imageSrc of top players every due to 05:01")
             const allRowsRequest = await allRows('playerInfo', 'playerInfo')
             const allRowsResponse = allRowsRequest.rows
             for (var i = 0; i < allRowsResponse.length; i++) {
@@ -341,6 +343,11 @@ router.get('/', async (req, res) => {
             truncate();
             const completedNow = moment().format('HH:mm:ss')
             console.log(chalk.blue('Completed second job at Time: ', chalk.blueBright(completedNow)));
+
+            process.on('unhandledRejection', (reason, p) => {
+                console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+                // application specific logging, throwing an error, or other logic here
+            });
 
         });
 
